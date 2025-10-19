@@ -46,7 +46,7 @@ class TripleIntegratorProblem {
   altro::problem::Problem MakeProblem(const bool add_constraints = false) {
     altro::problem::Problem prob(N);
 
-    // Cost Function
+    // 代价函数
     Eigen::VectorXd xref = xf;
     Eigen::VectorXd uref(m);
     const bool is_term = true;
@@ -59,7 +59,7 @@ class TripleIntegratorProblem {
     }
     prob.SetCostFunction(qterm, N);
 
-    // Dynamics
+    // 动力学
     using DModelType = altro::problem::DiscretizedModel<ModelType, Integrator>;
     ModelType model_continuous(dof);
     DModelType model = DModelType(model_continuous);
@@ -67,10 +67,10 @@ class TripleIntegratorProblem {
       prob.SetDynamics(std::make_shared<DModelType>(model), k);
     }
 
-    // Initial State
+    // 初始状态
     prob.SetInitialState(x0);
 
-    // Constraints
+    // 约束
     if (add_constraints) {
       std::vector<double> lb;
       std::vector<double> ub;

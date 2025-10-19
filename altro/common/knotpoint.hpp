@@ -13,20 +13,17 @@
 namespace altro {
 
 /**
- * @brief Stores the state, control, time, and time step for a single knot point
+ * @brief 存储单个节点的状态、控制、时间和时间步长
+ * 总结 ： 轨迹离散节点管理：在 iLQR/AL 等算法中存取每个时间节点的状态与控制，并区分终端节点。
+ * 状态和控制向量可以存在于栈或堆上，利用 Eigen 的 Matrix 类。如果 @tparam n 或 @tparam m
+ * 等于 Eigen::Dynamic，向量将在堆上分配。
  *
- * The state and control vectors can live on either the stack or the heap,
- * leveraging Eigen's Matrix class. If @tparam n or @tparam m are equal to
- * Eigen::Dynamic, the vector will allocated on the heap.
+ * 使用 `StateDimension` 和 `ControlDimension` 查询实际状态或控制维度。
+ * 使用 `StateMemorySize` 和 `ControlMemorySize` 获取类型参数。
  *
- * Use `StateDimension` and `ControlDimension` to query the actual state or
- * control dimension. Use `StateMemorySize` and `ControlMemorySize` to get the
- * type
- * parameters.
- *
- * @tparam n size of state vector. Can be Eigen::Dynamic.
- * @tparam m size of state vector. Can be Eigen::Dynamic.
- * @tparam T precision of state and control variables
+ * @tparam n 状态向量大小。可以是 Eigen::Dynamic。
+ * @tparam m 控制向量大小。可以是 Eigen::Dynamic。
+ * @tparam T 状态和控制变量的精度
  */
 template <int n, int m, class T = double>
 class KnotPoint : public StateControlSized<n, m> {
@@ -50,7 +47,7 @@ class KnotPoint : public StateControlSized<n, m> {
         x_(StateVector::Zero(_n)),
         u_(ControlVector::Zero(_m)) {}
 
-  // Copy from a knot point of different memory location but same size
+  // 从不同内存位置但相同大小的节点复制
   template <int n2, int m2>
   KnotPoint(const KnotPoint<n2, m2>& z2)  // NOLINT(google-explicit-constructor)
       : StateControlSized<n, m>(z2.StateDimension(), z2.ControlDimension()),
@@ -59,7 +56,7 @@ class KnotPoint : public StateControlSized<n, m> {
         t_(z2.GetTime()),
         h_(z2.GetStep()) {}
 
-  // Copy operations
+  // 复制操作
   KnotPoint(const KnotPoint& z)
       : StateControlSized<n, m>(z.n_, z.m_),
         x_(z.x_),
@@ -76,7 +73,7 @@ class KnotPoint : public StateControlSized<n, m> {
     return *this;
   }
 
-  // Move operations
+  // 移动操作
   KnotPoint(KnotPoint&& z) noexcept
       : StateControlSized<n, m>(z.n_, z.m_),
         x_(std::move(z.x_)),
@@ -126,16 +123,14 @@ class KnotPoint : public StateControlSized<n, m> {
   void SetStep(float h) { h_ = h; }
 
   /**
-   * @brief Check if the knot point is the last point in the trajectory, which
-   * has no length and only stores a state vector.
+   * @brief 检查节点是否是轨迹中的最后一个点，它没有长度且只存储状态向量。
    *
-   * @return true if the knot point is a terminal knot point
+   * @return 如果节点是终端节点则返回 true
    */
   bool IsTerminal() const { return h_ == 0; }
 
   /**
-   * @brief Set the knot point to be a terminal knot point, or the last
-   * knot point in the trajectory.
+   * @brief 将节点设置为终端节点，或轨迹中的最后一个节点。
    *
    */
   void SetTerminal() {
@@ -149,10 +144,9 @@ class KnotPoint : public StateControlSized<n, m> {
   }
 
   /**
-   * @brief Create a string containing a print out of all the states and controls
-   * in a single line.
+   * @brief 创建包含单行中所有状态和控制打印输出的字符串。
    * 
-   * @param width Controls the width of each numerical field
+   * @param width 控制每个数值字段的宽度
    * @return std::string 
    */
   std::string ToString(int width = 9) const {
@@ -176,8 +170,8 @@ class KnotPoint : public StateControlSized<n, m> {
 
   StateVector x_;
   ControlVector u_;
-  float t_ = 0.0;  // time
-  float h_ = 0.0;  // time step
+  float t_ = 0.0;  // 时间
+  float h_ = 0.0;  // 时间步长
 };
 
 }  // namespace altro

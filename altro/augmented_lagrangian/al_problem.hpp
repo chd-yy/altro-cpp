@@ -9,22 +9,18 @@ namespace altro {
 namespace augmented_lagrangian {
 
 /**
- * @brief Build the augmented Lagrangian trajectory optimization problem.
+ * @brief 构建增广拉格朗日轨迹优化问题。
  *
- * Takes a constrained trajectory optimization problem and creates an unconstrained
- * trajectory optimization problem by moving the constraints into the cost function
- * using an augmented Lagrangian cost. Each cost function is an ALCost<n, m>.
+ * 接受一个约束轨迹优化问题，通过使用增广拉格朗日代价将约束移动到代价函数中，
+ * 创建一个无约束轨迹优化问题。每个代价函数都是一个 ALCost<n, m>。
  *
- * @tparam n Compile-time state dimension.
- * @tparam m Compile-time control dimension.
- * @param[in] prob The original, potentially constrained, optimization problem.
- * @param[out] costs Optional container that will be populated with the ALCost
- * types that are assigned to the problem. Useful since the problem only stores
- * generic CostFunction pointers.
+ * @tparam n 编译时状态维度。
+ * @tparam m 编译时控制维度。
+ * @param[in] prob 原始的、可能受约束的优化问题。
+ * @param[out] costs 可选容器，将填充分配给问题的 ALCost 类型。
+ * 很有用，因为问题只存储通用 CostFunction 指针。
  *
- * @return problem::Problem A new unconstrained trajectory optimization problem
- * with an augmented Lagrangian cost function containing the constraints of the
- * original problem.
+ * @return problem::Problem 一个新的无约束轨迹优化问题，具有包含原始问题约束的增广拉格朗日代价函数。
  */
 template <int n, int m>
 problem::Problem BuildAugLagProblem(const problem::Problem& prob,
@@ -32,14 +28,13 @@ problem::Problem BuildAugLagProblem(const problem::Problem& prob,
   const int N = prob.NumSegments();
   problem::Problem prob_al(N, prob.GetInitialStatePointer());
 
-  // Copy initial state and dynamics
+  // 复制初始状态和动力学
   prob_al.SetInitialState(prob.GetInitialState());
   for (int k = 0; k < N; ++k) {
     prob_al.SetDynamics(prob.GetDynamics(k), k);
   }
 
-  // Create an augmented Lagrangian cost function combining the original cost
-  // function and the constraints
+  // 创建结合原始代价函数和约束的增广拉格朗日代价函数
   for (int k = 0; k <= N; ++k) {
     std::shared_ptr<ALCost<n, m>> alcost = std::make_shared<ALCost<n, m>>(prob, k);
     if (costs) {

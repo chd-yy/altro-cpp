@@ -17,13 +17,11 @@ namespace constraints {
 class IdentityCone;
 
 /**
- * @brief An Equality constraint (alias for ZeroCone)
+ * @brief 等式约束（ZeroCone 的别名）
  *
- * Generic equality constraint of the form
- * \f[ g(x,u) = 0 \f]
+ * 形式为 \f[ g(x,u) = 0 \f] 的通用等式约束
  *
- * The projection operation for equality constraints of this form projects the
- * value(s) to zero. The dual cone is the identity map.
+ * 这种形式的等式约束的投影操作将值投影到零。对偶锥是恒等映射。
  */
 class ZeroCone {
  public:
@@ -49,17 +47,16 @@ class ZeroCone {
 };
 
 /**
- * @brief An alias for the `ZeroCone` cone.
+ * @brief `ZeroCone` 锥的别名。
  * 
  */
 using Equality = ZeroCone;
 
 /**
- * @brief The Identity projection
+ * @brief 恒等投影
  *
- * The identity projection projects a point onto itself. It is the dual cone
- * for equality constraints, and is used in conic augmented Lagrangian to
- * handle the equality constraints.
+ * 恒等投影将点投影到自身。它是等式约束的对偶锥，用于锥形增广拉格朗日
+ * 来处理等式约束。
  *
  */
 class IdentityCone {
@@ -86,13 +83,11 @@ class IdentityCone {
 };
 
 /**
- * @brief The space of all negative numbers, an alias for inequality constraints.
+ * @brief 所有负数的空间，不等式约束的别名。
  *
- * Used to represent inequality constraints of the form:
- * \f[ h(x) \leq 0 \f]
+ * 用于表示形式为 \f[ h(x) \leq 0 \f] 的不等式约束：
  *
- * The negative orthant is a self-dual cone, and it's projection operator is
- * an element-wise `min(0, x)`.
+ * 负象限是自对偶锥，其投影算子是逐元素的 `min(0, x)`。
  *
  */
 class NegativeOrthant {
@@ -122,13 +117,13 @@ class NegativeOrthant {
 };
 
 /**
- * @brief A alias for the `NegativeOrthant` cone.
+ * @brief `NegativeOrthant` 锥的别名。
  * 
  */
 using Inequality = NegativeOrthant;
 
 /**
- * @brief Contains basic information about a single constraint
+ * @brief 包含单个约束的基本信息
  * 
  */
 struct ConstraintInfo {
@@ -144,30 +139,27 @@ std::ostream& operator<<(std::ostream& os, const ConstraintInfo& coninfo);
 
 // clang-format off
 /**
- * @brief An abstract constraint of the form:
- * \f[ g(x, u) \in K \f]
+ * @brief 形式为 \f[ g(x, u) \in K \f] 的抽象约束：
  *
- * where \f$ K \f$ is an arbitrary convex cone, specified by the `ConType` type parameteter.
- * This formulation supports generic equality and inequality constraints.
+ * 其中 \f$ K \f$ 是由 `ConType` 类型参数指定的任意凸锥。
+ * 此公式支持通用等式和不等式约束。
  *
- * # Interface
- * The user is expected to implement the folowing interface when defining a constraint:
- * - `int OutputDimension() const` - size of output (length of constraint).
+ * # 接口
+ * 定义约束时，用户应实现以下接口：
+ * - `int OutputDimension() const` - 输出大小（约束长度）。
  * - `void Evaluate(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::VectorXd> out)`
  * - `void Jacobian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<MatrixXd> out)`
- * - `std::string GetLabel() const` - A brief description of the constraint for printing.
+ * - `std::string GetLabel() const` - 约束的简要描述，用于打印。
  *
- * Where we use the following Eigen type alias:
+ * 我们使用以下 Eigen 类型别名：
  * 
  *      using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The constraint is required to at least have continuous 1st order derivatives,
- * and these derivatives must be implemented by the user. No automatic or
- * approximation differentiation methods are provided, although the Jacobian
- * can be verified using a finite difference method using `CheckJacobian`. See
- * documentation for `FunctionBase` for more information.
+ * 约束至少需要具有连续的一阶导数，这些导数必须由用户实现。
+ * 不提供自动或近似微分方法，但可以使用有限差分方法通过 `CheckJacobian`
+ * 验证雅可比矩阵。有关更多信息，请参阅 `FunctionBase` 的文档。
  *
- * @tparam ConType The type of constraint (equality, inequality, conic, etc.)
+ * @tparam ConType 约束类型（等式、不等式、锥形等）
  */
 // clang-format on
 template <class ConType>

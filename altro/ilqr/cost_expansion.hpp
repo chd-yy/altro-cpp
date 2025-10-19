@@ -14,14 +14,13 @@ namespace altro {
 namespace ilqr {
 
 /**
- * @brief Stores the first and second-order expansion of the cost
- * The underlying memory can either be stored on the heap or the stack,
- * depending on whether the state and control dimensions are specified at
- * compile time via the type parameters. Use Eigen::Dynamic to allocate on
- * the heap.
+ * @brief 存储代价函数的一阶和二阶展开
+ * 底层内存可以存储在堆上或栈上，
+ * 取决于状态和控制维度是否在编译时通过类型参数指定。
+ * 使用 Eigen::Dynamic 可在堆上分配。
  *
- * @tparam n compile-time state dimension
- * @tparam m compile-time control dimension
+ * @tparam n 编译时状态维度
+ * @tparam m 编译时控制维度
  */
 template <int n, int m>
 class CostExpansion : public StateControlSized<n, m> {
@@ -34,7 +33,7 @@ class CostExpansion : public StateControlSized<n, m> {
         dx_(Eigen::Matrix<double, n, 1>::Zero(state_dim, 1)),
         du_(Eigen::Matrix<double, m, 1>::Zero(control_dim, 1)) {}
 
-  // Copy operators
+  // 拷贝操作符
   CostExpansion(const CostExpansion& exp)
       : StateControlSized<n, m>(exp.StateDimension(), exp.ControlDimension()),
         dxdx_(exp.dxdx()),
@@ -61,7 +60,7 @@ class CostExpansion : public StateControlSized<n, m> {
     return *this;
   }
 
-  // Move operators
+  // 移动操作符
   CostExpansion(CostExpansion&& exp) noexcept
       : StateControlSized<n, m>(exp.StateDimension(), exp.ControlDimension()),
         dxdx_(std::move(exp.dxdx_)),
@@ -101,13 +100,12 @@ class CostExpansion : public StateControlSized<n, m> {
   const Eigen::Matrix<double, m, 1>& du() const { return du_; }
 
   /**
-   * @brief Compute the gradient and Hessian of a cost function and store in
-   * the current expansion
+   * @brief 计算代价函数的梯度和 Hessian 矩阵并存储在当前展开中
    *
-   * @tparam n2 compile-time size of the state vector
-   * @tparam m2 compile-time size of the control vector
-   * @param[in] costfun Cost function whose expansion is to be computed
-   * @param[in] z state and control at which to evaluate the expansion
+   * @tparam n2 状态向量的编译时大小
+   * @tparam m2 控制向量的编译时大小
+   * @param[in] costfun 要计算展开的代价函数
+   * @param[in] z 评估展开的状态和控制
    */
   template <int n2, int m2>
   void CalcExpansion(const std::shared_ptr<problem::CostFunction>& costfun,

@@ -13,46 +13,46 @@ namespace altro {
 constexpr int kPickHardwareThreads = -1;
 
 /**
- * @brief Options for augmented Lagrangian and iLQR solvers
+ * @brief 增广拉格朗日和 iLQR 求解器的选项
  * 
  */
 struct SolverOptions {
   SolverOptions();
   // clang-format off
   // NOLINT comments added to supress clang-tidy [readibility-magic-numbers] check
-  int max_iterations_total = 300;         // NOLINT Maximum number of total iterative LQR iterations
-  int max_iterations_outer = 30;          // NOLINT Maximum augmented Lagrangian iterations
-  int max_iterations_inner = 100;         // NOLINT Max iLQR iterations in a single solve
-  double cost_tolerance = 1e-4;           // NOLINT Threshold for cost decrease 
-  double gradient_tolerance = 1e-2;       // NOLINT Threshold for infinity-norm of the approximate gradient
+  int max_iterations_total = 300;         // NOLINT 总迭代 LQR 迭代的最大次数
+  int max_iterations_outer = 30;          // NOLINT 增广拉格朗日迭代的最大次数
+  int max_iterations_inner = 100;         // NOLINT 单次求解中的最大 iLQR 迭代次数
+  double cost_tolerance = 1e-4;           // NOLINT 代价下降的阈值
+  double gradient_tolerance = 1e-2;       // NOLINT 近似梯度无穷范数的阈值
 
-  double bp_reg_increase_factor = 1.6;    // NOLINT Multiplicative factor for increasing the regularization
-  bool bp_reg_enable = true;              // NOLINT Enable regularization in the backward pass
-  double bp_reg_initial = 0.0;            // NOLINT Initial regularization
-  double bp_reg_max = 1e8;                // NOLINT Maximum regularization
-  double bp_reg_min = 1e-8;               // NOLINT Minimum regularization
+  double bp_reg_increase_factor = 1.6;    // NOLINT 增加正则化的乘法因子
+  bool bp_reg_enable = true;              // NOLINT 在后向传递中启用正则化
+  double bp_reg_initial = 0.0;            // NOLINT 初始正则化
+  double bp_reg_max = 1e8;                // NOLINT 最大正则化
+  double bp_reg_min = 1e-8;               // NOLINT 最小正则化
   // double bp_reg_forwardpass = 10.0;     
-  int bp_reg_fail_threshold = 100;        // NOLINT How many time the backward pass can fail before throwing an error
-  bool check_forwardpass_bounds = true;   // NOLINT Whether to check if the rollouts stay within the specified bounds
-  double state_max = 1e8;                 // NOLINT Maximum state value (abs)
-  double control_max = 1e8;               // NOLINT Maximum control value (abs)
+  int bp_reg_fail_threshold = 100;        // NOLINT 后向传递在抛出错误前可以失败的次数
+  bool check_forwardpass_bounds = true;   // NOLINT 是否检查展开是否保持在指定边界内
+  double state_max = 1e8;                 // NOLINT 最大状态值（绝对值）
+  double control_max = 1e8;               // NOLINT 最大控制值（绝对值）
 
-  int line_search_max_iterations = 20;    // NOLINT Maximum number of line search iterations before increasing regularization
-  double line_search_lower_bound = 1e-8;  // NOLINT Sufficient improvement condition
-  double line_search_upper_bound = 10.0;  // NOLINT Can't make too much more improvement than expected
-  double line_search_decrease_factor = 2; // NOLINT How much the line search step size is decreased each iteration
+  int line_search_max_iterations = 20;    // NOLINT 在增加正则化之前的最大线搜索迭代次数
+  double line_search_lower_bound = 1e-8;  // NOLINT 充分改进条件
+  double line_search_upper_bound = 10.0;  // NOLINT 不能比预期改进太多
+  double line_search_decrease_factor = 2; // NOLINT 每次迭代线搜索步长减少多少
 
-  double constraint_tolerance = 1e-4;     // NOLINT Maximum constraint violation theshold
-  double maximum_penalty = 1e8;           // NOLINT Maximum penalty parameter allowed
-  double initial_penalty = 1.0;           // NOLINT Initial penalty for all constraints. Will always reset all penalties to this value before every solve. Set to 0 to disable.
-  bool reset_duals = true;                // NOLINT Reset the dual variables before each solve
-  int header_frequency = 10;              // NOLINT Frequency at which the header is printed for AL iterations (for levels < kInner)
-  LogLevel verbose = LogLevel::kSilent;   // Output verbosity level
-  bool profiler_enable = false;                  // Enable internal profiler
-  bool profiler_output_to_file = false;    // Output to file (true) or stdout (false)
+  double constraint_tolerance = 1e-4;     // NOLINT 最大约束违反阈值
+  double maximum_penalty = 1e8;           // NOLINT 允许的最大惩罚参数
+  double initial_penalty = 1.0;           // NOLINT 所有约束的初始惩罚。每次求解前总是将所有惩罚重置为此值。设置为 0 以禁用。
+  bool reset_duals = true;                // NOLINT 每次求解前重置对偶变量
+  int header_frequency = 10;              // NOLINT AL 迭代的标题打印频率（对于级别 < kInner）
+  LogLevel verbose = LogLevel::kSilent;   // 输出详细程度级别
+  bool profiler_enable = false;                  // 启用内部分析器
+  bool profiler_output_to_file = false;    // 输出到文件（true）或标准输出（false）
   std::string log_directory;
   std::string profile_filename = "profiler.out";
-  int nthreads = 1;                        // Number of processors to use. Set to kPickHardwareThreads to choose automatically.
+  int nthreads = 1;                        // 要使用的处理器数量。设置为 kPickHardwareThreads 以自动选择。
   int tasks_per_thread = 1;
   // clang-format on
 

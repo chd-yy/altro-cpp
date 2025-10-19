@@ -11,6 +11,7 @@ UnicycleProblem::UnicycleProblem() {
 altro::problem::Problem UnicycleProblem::MakeProblem(const bool add_constraints) {
   altro::problem::Problem prob(N);
 
+  // 目标约束示例（如需使用）
   // goal = std::make_shared<altro::examples::GoalConstraint>(xf);
 
   float h;
@@ -37,9 +38,9 @@ altro::problem::Problem UnicycleProblem::MakeProblem(const bool add_constraints)
 
     const double scaling = 3.0;
     constexpr int num_obstacles = 3;
-    cx = Eigen::Vector3d(0.25, 0.5, 0.75);  // x-coordinates of obstacles
-    cy = Eigen::Vector3d(0.25, 0.5, 0.75);  // y-coordinates of obstacles
-    cr = Eigen::Vector3d::Constant(0.425);  // radii of obstacles
+    cx = Eigen::Vector3d(0.25, 0.5, 0.75);  // 障碍物的 x 坐标
+    cy = Eigen::Vector3d(0.25, 0.5, 0.75);  // 障碍物的 y 坐标
+    cr = Eigen::Vector3d::Constant(0.425);  // 障碍物半径
     cx *= scaling;
     cy *= scaling;
 
@@ -59,7 +60,7 @@ altro::problem::Problem UnicycleProblem::MakeProblem(const bool add_constraints)
     }
   }
 
-  // Cost Function
+  // 代价函数
   for (int k = 0; k < N; ++k) {
     qcost =
         std::make_shared<examples::QuadraticCost>(examples::QuadraticCost::LQRCost(Q, R, xf, uref));
@@ -69,12 +70,12 @@ altro::problem::Problem UnicycleProblem::MakeProblem(const bool add_constraints)
       examples::QuadraticCost::LQRCost(Qf, R * 0, xf, uref, true));
   prob.SetCostFunction(qterm, N);
 
-  // Dynamics
+  // 动力学
   for (int k = 0; k < N; ++k) {
     prob.SetDynamics(std::make_shared<ModelType>(model), k);
   }
 
-  // Constraints
+  // 约束
   if (add_constraints) {
     for (int k = 0; k < N; ++k) {
       prob.SetConstraint(std::make_shared<altro::examples::ControlBound>(lb, ub), k);
@@ -82,7 +83,7 @@ altro::problem::Problem UnicycleProblem::MakeProblem(const bool add_constraints)
     prob.SetConstraint(std::make_shared<examples::GoalConstraint>(xf), N);
   }
 
-  // Initial State
+  // 初始状态
   prob.SetInitialState(x0);
 
   return prob;

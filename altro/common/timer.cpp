@@ -1,4 +1,4 @@
-// Copyright [2021] Optimus Ride Inc.
+// 版权声明 [2021] Optimus Ride Inc.
 
 #include "altro/common/timer.hpp"
 #include "altro/common/profile_entry.hpp"
@@ -11,7 +11,7 @@ Timer::~Timer() {
   if (!printed_summary_ && active_) {
     PrintSummary(); 
   }
-  // Close the file if the Timer has ownship
+  // 若 Timer 拥有文件资源的所有权，则在析构时关闭文件
   if (using_file_) {
     fclose(io_);
   }

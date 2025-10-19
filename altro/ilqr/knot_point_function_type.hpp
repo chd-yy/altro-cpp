@@ -15,7 +15,7 @@
 namespace altro {
 namespace ilqr {
 
-// TODO(bjackson): implement other regularization methods
+// TODO(bjackson): 实现其他正则化方法
 enum class BackwardPassRegularization {
   kControlOnly,
   // kStateOnly,
@@ -23,16 +23,14 @@ enum class BackwardPassRegularization {
 };
 
 /**
- * @brief Stores the methods and data to evaluate various expressions at
- * each knot point
+ * @brief 存储在每个节点评估各种表达式的方法和数据
  *
- * Stores the cost and dynamics definitions, and provides methods to evaluate
- * their expansions. Also provides methods to calculate terms needed by the
- * iLQR backward pass, and stores the action-value expansion, the quadratic
- * approximation of the cost-to-go, and the feedback and feedforward gains.
+ * 存储代价和动力学定义，并提供方法来评估它们的展开。
+ * 还提供计算 iLQR 后向传递所需项的方法，并存储动作值展开、
+ * 代价到达的二次近似以及反馈和前馈增益。
  *
- * @tparam n Compile-time state dimension
- * @tparam m Compile-time control dimension
+ * @tparam n 编译时状态维度
+ * @tparam m 编译时控制维度
  */
 template <int n, int m>
 class KnotPointFunctions : public StateControlSized<n, m> {
@@ -60,7 +58,7 @@ public:
     ALTRO_ASSERT(costfun_ptr_ != nullptr, "Cannot provide a null cost function pointer.");
     Init();
   }
-  // Create the kpf for the last knot point
+  // 为最后一个节点创建 kpf
   KnotPointFunctions(int state_dim, int control_dim, CostFunPtr costfun)
       : StateControlSized<n, m>(state_dim, control_dim), model_ptr_(nullptr),
         costfun_ptr_(std::move(costfun)), cost_expansion_(state_dim, control_dim),
@@ -72,10 +70,10 @@ public:
   }
 
   /**
-   * @brief Evaluate the cost for the knot point
+   * @brief 评估节点的代价
    *
-   * @param x state vector
-   * @param u control vector
+   * @param x 状态向量
+   * @param u 控制向量
    * @return double
    */
   double Cost(const VectorXdRef &x,
@@ -84,13 +82,13 @@ public:
   }
 
   /**
-   * @brief Evaluate the discrete dynamics at the knot point
+   * @brief 评估节点处的离散动力学
    *
-   * @param x state vector
-   * @param u control vector
-   * @param t independent variable (e.g. time)
-   * @param h step in independent variable
-   * @param xnext states at the next knot point
+   * @param x 状态向量
+   * @param u 控制向量
+   * @param t 自变量（例如时间）
+   * @param h 自变量的步长
+   * @param xnext 下一个节点的状态
    */
   void Dynamics(const VectorXdRef &x,
                 const VectorXdRef &u, float t, float h,
@@ -99,10 +97,10 @@ public:
   }
 
   /**
-   * @brief Evaluate the 2nd order expansion of the cost function
+   * @brief 评估代价函数的二阶展开
    *
-   * @param x state vector
-   * @param u control vector
+   * @param x 状态向量
+   * @param u 控制向量
    */
   void CalcCostExpansion(const VectorXdRef &x,
                          const VectorXdRef &u) {
@@ -111,12 +109,12 @@ public:
   }
 
   /**
-   * @brief Evaluate the first-order expansion of the dynamics
+   * @brief 评估动力学的一阶展开
    *
-   * @param x state vector
-   * @param u control vector
-   * @param t independent variable (e.g. time)
-   * @param h step in independent variable
+   * @param x 状态向量
+   * @param u 控制向量
+   * @param t 自变量（例如时间）
+   * @param h 自变量的步长
    */
   void CalcDynamicsExpansion(const VectorXdRef &x,
                              const VectorXdRef &u, const float t,
@@ -128,8 +126,7 @@ public:
   }
 
   /**
-   * @brief Calculate the terminal cost-to-go, or the cost-to-go at the last
-   * knot point.
+   * @brief 计算终端代价到达，或最后一个节点的代价到达。
    *
    */
   void CalcTerminalCostToGo() {
@@ -138,13 +135,12 @@ public:
   }
 
   /**
-   * @brief Calculate the action-value expansion given the quadratic
-   * approximation of the cost-to-go at the next time step.
+   * @brief 给定下一时刻代价到达的二次近似，计算动作值展开。
    *
-   * @pre The cost and dynamics expansions must be calculated.
+   * @pre 必须先计算代价和动力学展开。
    *
-   * @param ctg_hessian Hessian of the cost-to-go at the next time step.
-   * @param ctg_gradient Gradient of the cost-to-go at the next time step.
+   * @param ctg_hessian 下一时刻代价到达的 Hessian 矩阵。
+   * @param ctg_gradient 下一时刻代价到达的梯度。
    */
   void
   CalcActionValueExpansion(const Eigen::Ref<const MatrixXd> &ctg_hessian,
@@ -164,13 +160,12 @@ public:
   }
 
   /**
-   * @brief Add regularization to the action-value expansion prior to solving
-   * for the optimal feedback policy.
+   * @brief 在求解最优反馈策略之前，向动作值展开添加正则化。
    *
-   * @pre The action value expansion must be calculated.
+   * @pre 必须先计算动作值展开。
    *
-   * @param rho Amount of regularization
-   * @param reg_type How to incorporate the regularization.
+   * @param rho 正则化量
+   * @param reg_type 如何合并正则化。
    */
   void RegularizeActionValue(const double rho,
                              BackwardPassRegularization reg_type =
@@ -186,16 +181,15 @@ public:
   }
 
   /**
-   * @brief Calculate the feedback and feedforward gains by inverting the
-   * Hessian of the action-value expansion with respect to u using a
-   * Cholesky decomposition.
+   * @brief 通过使用 Cholesky 分解反转动作值展开关于 u 的 Hessian 矩阵
+   * 来计算反馈和前馈增益。
    *
-   * @pre The regularized action-value expansion must be calculated.
+   * @pre 必须先计算正则化的动作值展开。
    *
-   * @return Eigen enum describing the result of the Cholesky factorization.
+   * @return 描述 Cholesky 分解结果的 Eigen 枚举。
    */
   Eigen::ComputationInfo CalcGains() {
-    // TODO(bjackson): Store factorization in the class
+    // TODO(bjackson): 在类中存储分解
     Eigen::LLT<Eigen::Matrix<double, m, m>> Quu_chol;
     Quu_chol.compute(action_value_expansion_regularized_.dudu());
     Eigen::ComputationInfo info = Quu_chol.info();
@@ -211,10 +205,9 @@ public:
   }
 
   /**
-   * @brief Calculate the current quadratic approximation of the cost-to-go
-   * given the feedback policy.
+   * @brief 给定反馈策略，计算代价到达的当前二次近似。
    *
-   * @pre The gains and action-value expansion must be computed.
+   * @pre 必须先计算增益和动作值展开。
    *
    */
   void CalcCostToGo() {
@@ -239,7 +232,7 @@ public:
     deltaV[1] += ctg_delta_[1];
   }
 
-  /**************************** Getters ***************************************/
+  /**************************** 获取器 ***************************************/
   std::shared_ptr<problem::DiscreteDynamics> GetModelPtr() {
     return model_ptr_;
   }
@@ -278,7 +271,7 @@ private:
   }
 
   void CheckDynamicsPtr(const DynamicsPtr& dynamics) {
-    (void) dynamics;  // needed to surpress erroneous unused variable warning
+    (void) dynamics;  // 需要这样做以抑制错误的未使用变量警告
     ALTRO_ASSERT(dynamics != nullptr, "Cannot provide a null dynamics pointer.");
   }
 

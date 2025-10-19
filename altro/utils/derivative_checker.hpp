@@ -1,4 +1,4 @@
-// Copyright [2021] Optimus Ride Inc.
+// 版权 [2021] Optimus Ride Inc.
 
 #pragma once
 
@@ -13,16 +13,16 @@ Eigen::Matrix<double, nrows, ncols> FiniteDiffJacobian(
     const double eps = 1e-6, const bool central = false) {
   const int n = x.rows();
 
-  // Evaluate the function and get output size
+  // 计算函数值并获得输出维度
   Eigen::Matrix<double, nrows, 1> y = f(x);
   const int m = y.rows();
   Eigen::Matrix<double, nrows, ncols> jac =
       Eigen::Matrix<double, nrows, ncols>::Zero(m, n);
 
-  // Create pertubation vector
+  // 创建扰动向量
   Eigen::Matrix<double, ncols, 1> e = Eigen::Matrix<double, ncols, 1>::Zero(n);
 
-  // Loop over columns
+  // 按列循环
   e(0) = eps;
   for (int i = 0; i < n; ++i) {
     double step = eps;
@@ -40,20 +40,16 @@ Eigen::Matrix<double, nrows, ncols> FiniteDiffJacobian(
 }
 
 /**
- * @brief Calculate the approximate Jacobian of the function @param f using
- * finite-differences
+ * @brief 使用有限差分计算函数 f 的近似雅可比矩阵
  *
- * @tparam ncols static size of input. Can be -1 for heap-allocated vectors.
- * @tparam Func generic function type (just needs () operator)
- * @tparam nrows static size of the output. Can be -1 (default) for
- * heap-allocated arrays
- * @tparam T floating point type. Should be double-precision for best results.
- * @param f function-like object that implements () operator taking in the
- * vector x and returning a vector y.
- * @param x vector input to the function `func`
- * @param eps perturbation size for finite difference step
- * @param central if `true` will use the more accurate but more computationally
- * expensive central-difference method
+ * @tparam ncols 输入的静态尺寸。对堆分配向量可设为 -1。
+ * @tparam Func 函数样对象类型（只需实现 () 运算符）。
+ * @tparam nrows 输出的静态尺寸。可为 -1（默认），表示堆分配数组。
+ * @tparam T 浮点类型。为获得最佳效果，应使用双精度。
+ * @param f 接受向量 x 并返回向量 y 的函数样对象（实现 () 运算符）。
+ * @param x 传入到函数 `func` 的输入向量。
+ * @param eps 有限差分步长的扰动大小。
+ * @param central 若为 `true`，使用更精确但计算量更大的中心差分方法。
  * @return Eigen::Matrix<T, nrows, ncols>
  */
 template <class Func>
@@ -65,10 +61,9 @@ Eigen::MatrixXd FiniteDiffJacobian(const Func &f,
 }
 
 /**
- * @brief Converts a function object that returns a scalar to one that returns a
- * 1D vector
+ * @brief 将返回标量的函数对象转换为返回一维向量的函数对象
  *
- * @tparam Func function-like object
+ * @tparam Func 函数样对象
  */
 template <class Func>
 struct ScalarToVec {
@@ -82,14 +77,12 @@ struct ScalarToVec {
 };
 
 /**
- * @brief Calculate the gradient of a scalar-valued function using finite
- * differences
- * Simply converts the function to return a 1D vector and calls
- * `FiniteDiffJacobian`
+ * @brief 使用有限差分计算标量值函数的梯度
+ * 简单地将函数转换为返回一维向量并调用 `FiniteDiffJacobian`
  *
- * See `FiniteDiffJacobian` for full docstring.
+ * 详见 `FiniteDiffJacobian` 的完整文档。
  *
- * @return Eigen::Matrix<T, ncols, 1> a column vector
+ * @return Eigen::Matrix<T, ncols, 1> 列向量
  */
 template <int ncols, class Func>
 Eigen::Matrix<double, ncols, 1> FiniteDiffGradient(
@@ -101,12 +94,11 @@ Eigen::Matrix<double, ncols, 1> FiniteDiffGradient(
 }
 
 /**
- * @brief A functor that calculates the gradient of an arbitrary scalar-valued
- * function
+ * @brief 计算任意标量值函数梯度的仿函数
  *
- * @tparam nrows static size of input. Can be Eigen::Dynamic.
- * @tparam Func function-like object
- * @tparam T floating-point precision
+ * @tparam nrows 输入的静态尺寸。可为 Eigen::Dynamic。
+ * @tparam Func 函数样对象
+ * @tparam T 浮点精度类型
  */
 template <int nrows, class Func, class T>
 struct FiniteDiffGradientFunc {
@@ -120,11 +112,10 @@ struct FiniteDiffGradientFunc {
 };
 
 /**
- * @brief Calculate the hessian of a scalar-valued function f
- * Generates a functor that calculates the gradient using finite-differences and
- * then calls `FiniteDiffJacobian` on that object.
+ * @brief 计算标量值函数 f 的海森矩阵
+ * 生成一个使用有限差分计算梯度的仿函数，然后对该对象调用 `FiniteDiffJacobian`。
  *
- * See `FiniteDiffJacobian` for full docstring
+ * 详见 `FiniteDiffJacobian` 的完整文档。
  *
  * @return Eigen::Matrix<T, ncols, ncols>
  */

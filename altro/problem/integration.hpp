@@ -12,23 +12,19 @@
 namespace altro {
 namespace problem {
 /**
- * @brief Interface class for explicit integration methods for dynamical
- * systems.
+ * @brief 动力学系统显式积分方法的接口类。
  *
- * All sub-classes must implement the `Integrate` method that integrates an
- * arbitrary functor over some time step, as well as it's first derivative
- * via the `Jacobian` method. 
+ * 所有子类必须实现 `Integrate` 方法，用于在某个时间步上对任意仿函数进行积分，
+ * 以及通过 `Jacobian` 方法给出其一阶导数。
  * 
- * Sub-classes should have a constructor that takes the state and control 
- * dimension, e.g.:
+ * 子类应提供一个接收状态和控制维度的构造函数，例如：
  * 
  * `MyIntegrator(int n, int m);`
  *
- * @tparam DynamicsFunc the type of the function-like object that evaluates a
- * first-order ordinary differential equation with the following signature:
+ * @tparam DynamicsFunc 用于计算一阶常微分方程的类/可调用对象类型，其函数签名为：
  * dynamics(const VectorXd& x, const VectorXd& u, float t) const
  *
- * See `ContinuousDynamics` class for the expected interface.
+ * 期望接口参见 `ContinuousDynamics` 类。
  */
 template <int NStates, int NControls>
 class ExplicitIntegrator : public StateControlSized<NStates, NControls> {
@@ -43,44 +39,41 @@ class ExplicitIntegrator : public StateControlSized<NStates, NControls> {
   virtual ~ExplicitIntegrator() = default;
 
   /**
-   * @brief Integrate the dynamics over a given time step
+   * @brief 在给定时间步上对动力学进行积分
    *
-   * @param[in] dynamics ContinuousDynamics object to evaluate the continuous
-   * dynamics
-   * @param[in] x state vector
-   * @param[in] u control vector
-   * @param[in] t independent variable (e.g. time)
-   * @param[in] h discretization step length (e.g. time step)
-   * @return VectorXd state vector at the end of the time step
+   * @param[in] dynamics 用于计算连续动力学的 `ContinuousDynamics` 对象
+   * @param[in] x 状态向量
+   * @param[in] u 控制向量
+   * @param[in] t 自变量（例如时间）
+   * @param[in] h 离散化步长（例如时间步）
+   * @return VectorXd 时间步末的状态向量
    */
   virtual void Integrate(const DynamicsPtr& dynamics, const VectorXdRef& x,
                          const VectorXdRef& u, float t, float h,
                          Eigen::Ref<VectorXd> xnext) = 0;
 
   /**
-   * @brief Evaluate the Jacobian of the discrete dynamics
+   * @brief 计算离散动力学的雅可比矩阵
    *
-   * Will typically call the continuous dynamics Jacobian.
+   * 通常会调用连续动力学的雅可比计算。
    *
-   * @pre Jacobian must be initialized
+   * @pre 传入的 `jac` 必须已完成尺寸初始化
    *
-   * @param[in] dynamics ContinuousDynamics object to evaluate the continuous
-   * dynamics
-   * @param[in] x state vector
-   * @param[in] u control vector
-   * @param[in] t independent variable (e.g. time)
-   * @param[in] h discretization step length (e.g. time step)
-   * @param[out] jac discrete dynamics Jacobian evaluated at x, u, t.
+   * @param[in] dynamics 用于计算连续动力学的 `ContinuousDynamics` 对象
+   * @param[in] x 状态向量
+   * @param[in] u 控制向量
+   * @param[in] t 自变量（例如时间）
+   * @param[in] h 离散化步长（例如时间步）
+   * @param[out] jac 在 (x, u, t) 处评估得到的离散动力学雅可比
    */
   virtual void Jacobian(const DynamicsPtr& dynamics, const VectorXdRef& x,
                         const VectorXdRef& u, float t, float h, Eigen::Ref<MatrixXd> jac) = 0;
 };
 
 /**
- * @brief Basic explicit Euler integration
+ * @brief 基本的显式欧拉积分器
  *
- * Simplest integrator that requires only a single evaluationg of the continuous
- * dynamics but suffers from significant integration errors.
+ * 最简单的积分器，只需要对连续动力学进行一次评估，但积分误差较大。
  *
  * @tparam DynamicsFunc
  */
@@ -102,10 +95,9 @@ class ExplicitEuler final : public ExplicitIntegrator<Eigen::Dynamic, Eigen::Dyn
 };
 
 /**
- * @brief Fourth-order explicit Runge Kutta integrator.
+ * @brief 四阶显式 Runge-Kutta 积分器（RK4）。
  *
- * De-facto explicit integrator for many robotics applications.
- * Good balance between accuracy and computational effort.
+ * 在众多机器人应用中是事实上的显式积分标准，兼顾精度与计算量。
  *
  * @tparam DynamicsFunc
  */
@@ -184,9 +176,8 @@ class RungeKutta4 final : public ExplicitIntegrator<NStates, NControls> {
     }
   }
 
-  // These need to be mutable to keep the integration methods as const methods
-  // Since they replace arrays that would otherwise be created temporarily and 
-  // provide no public access, it should be fine.
+  // 这些成员需要可变，以便积分方法可保持 const
+  // 它们替代了本应临时创建的数组，且不对外公开访问，这样处理是合理的。
   VectorNd<NStates> k1_;
   VectorNd<NStates> k2_;
   VectorNd<NStates> k3_;

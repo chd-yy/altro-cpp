@@ -14,46 +14,42 @@ namespace problem {
 
 // clang-format off
 /**
- * @brief Represents a continuous dynamics function of the form:
+ * @brief 表示如下形式的连续动力学函数：
  * \f[ \dot{x} = f(x, u) \f]
  *
- * As a specialization of the `FunctionsBase` interface, the user is
- * expected is expected implement the following interface:
+ * 作为 `FunctionsBase` 接口的特化，用户需要实现以下接口：
  *
- * # Interface
- * - `int StateDimension() const` - number of states (length of x)
- * - `int ControlDimension() const` - number of controls (length of u)
+ * # 接口
+ * - `int StateDimension() const` - 状态数量（x 的长度）
+ * - `int ControlDimension() const` - 控制数量（u 的长度）
  * - `void Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t, Eigen::Ref<Eigen::VectorXd>
  * out)`
  * - `void Jacobian(const VectorXdRef& x, const VectorXdRef& u, float t, Eigen::Ref<MatrixXd> out)`
  * - `void Hessian(const VectorXdRef& x, const VectorXdRef& u, float t, const VectorXdRef& b,
- * Eigen::Ref<Eigen::MatrixXd> hess)` - optional
- * - `bool HasHessian() const` - Specify if the Hessian is implemented
+ * Eigen::Ref<Eigen::MatrixXd> hess)` - 可选
+ * - `bool HasHessian() const` - 指定是否实现 Hessian
  *
- * Where we use the following Eigen type alias:
+ * 我们使用以下 Eigen 类型别名：
  * 
  *      using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The user also has the option of defining the static constants:
+ * 用户还可以选择定义以下静态常量：
  * 
  *      static constexpr int NStates
  *      static constexpr int NControls
  *      static constexpr int NOutputs
  *
- * which can be used to provide compile-time size information. For best performance, 
- * it is highly recommended that the user specify these constants, which default to 
- * `Eigen::Dynamic` if not specified.
+ * 这些可用于提供编译期大小信息。为获得最佳性能，强烈建议用户提供这些常量；
+ * 若未提供，则默认使用 `Eigen::Dynamic`。
  *
  * ## FunctionBase API
- * If the original FunctionBase API is needed, the following lines need to be
- * added to the public interface of the derived class:
+ * 若需要原始的 FunctionBase API，需要在派生类的 public 接口中添加：
  *    using FunctionBase::Evaluate;
  *    using FunctionBase::Jacobian;
  *    using FunctionBase::Hessian;
  *
- * NOTE: If using the FunctionBase API with time-varying dynamics, remember
- * that the time must be updated using `ContinuousDynamics::SetTime` before calling
- * `FunctionBase::Evaluate`.
+ * 注意：若在时变动力学中使用 FunctionBase API，务必在调用
+ * `FunctionBase::Evaluate` 前，通过 `ContinuousDynamics::SetTime` 更新时间。
  */
 // clang-format on
 class ContinuousDynamics : public FunctionBase {
@@ -64,14 +60,14 @@ class ContinuousDynamics : public FunctionBase {
 
   int OutputDimension() const override { return StateDimension(); }
 
-  // New Interface
+  // 新接口
   virtual void Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t,
                         Eigen::Ref<VectorXd> xdot) = 0;
   virtual void Jacobian(const VectorXdRef& x, const VectorXdRef& u, float t, Eigen::Ref<MatrixXd> jac) = 0;
   virtual void Hessian(const VectorXdRef& x, const VectorXdRef& u, float t, const VectorXdRef& b,
                        Eigen::Ref<MatrixXd> hess) = 0;
 
-  // Convenience methods
+  // 便捷方法
   VectorXd Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t);
   VectorXd operator()(const VectorXdRef& x, const VectorXdRef& u, float t);
 
@@ -94,55 +90,51 @@ class ContinuousDynamics : public FunctionBase {
   float t_ = 0.0F;
 };
 
-// clang-format off
+  // clang-format off
 /**
- * @brief Represents a discrete dynamics function of the form:
+ * @brief 表示如下形式的离散动力学函数：
  * \f$ x_{k+1} = f(x_k, u_k) \f$
  * 
- * This is the form of the dynamics expected by the altro library. A continuous 
- * time dynamics model can be converted to a discrete model using e.g. `DiscretizedDynamics`.
+ * 这是 altro 库期望的动力学形式。连续时间动力学可通过 `DiscretizedDynamics` 等转换为离散模型。
  *
- * As a specialization of the `FunctionsBase` interface, the user is
- * expected is expected implement the following interface:
+ * 作为 `FunctionsBase` 接口的特化，用户需要实现以下接口：
  *
- * # Interface
- * - `int StateDimension() const` - number of states (length of x)
- * - `int ControlDimension() const` - number of controls (length of u)
+ * # 接口
+ * - `int StateDimension() const` - 状态数量（x 的长度）
+ * - `int ControlDimension() const` - 控制数量（u 的长度）
  * - `void Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t, float h, Eigen::Ref<Eigen::VectorXd>
  * out)`
  * - `void Jacobian(const VectorXdRef& x, const VectorXdRef& u, float t, float h, Eigen::Ref<MatrixXd> out)`
  * - `void Hessian(const VectorXdRef& x, const VectorXdRef& u, float t, float h, const VectorXdRef& b,
- * Eigen::Ref<Eigen::MatrixXd> hess)` - optional
- * - `bool HasHessian() const` - Specify if the Hessian is implemented
+ * Eigen::Ref<Eigen::MatrixXd> hess)` - 可选
+ * - `bool HasHessian() const` - 指定是否实现 Hessian
  *
- * Where `t` is the time (for time-dependent dynamics) and `h` is the time step. 
- * These can be set and retrieved using `SetTime`, `SetStep`, `GetTime`, and `GetStep`.
+ * 其中，`t` 为时间（针对时变动力学），`h` 为时间步。
+ * 可通过 `SetTime`、`SetStep`、`GetTime`、`GetStep` 进行设置与获取。
  * 
- * Where we use the following Eigen type alias:
+ * 我们使用以下 Eigen 类型别名：
  * 
  *      using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The user also has the option of defining the static constants:
+ * 用户还可以选择定义以下静态常量：
  * 
  *      static constexpr int NStates
  *      static constexpr int NControls
  *      static constexpr int NOutputs
  *
- * which can be used to provide compile-time size information. For best performance, 
- * it is highly recommended that the user specify these constants, which default to 
- * `Eigen::Dynamic` if not specified.
+ * 这些可用于提供编译期大小信息。为获得最佳性能，强烈建议用户提供这些常量；
+ * 若未提供，则默认使用 `Eigen::Dynamic`。
  *
  * ## FunctionBase API
- * If the original FunctionBase API is needed, the following lines need to be
- * added to the public interface of the derived class:
+ * 若需要原始的 FunctionBase API，需要在派生类的 public 接口中添加：
  * 
  *    using FunctionBase::Evaluate;
  *    using FunctionBase::Jacobian;
  *    using FunctionBase::Hessian;
  *
- * NOTE: If using the FunctionBase API with time-varying dynamics, remember
- * that the time must be updated using `DiscreteDynamics::SetTime`  and 
- * `DiscreteDynamics.SetStep` before calling `FunctionBase::Evaluate`.
+ * 注意：若在时变动力学中使用 FunctionBase API，务必在调用
+ * `FunctionBase::Evaluate` 前，通过 `DiscreteDynamics::SetTime` 与 
+ * `DiscreteDynamics::SetStep` 更新时间与步长。
  */
 // clang-format on
 class DiscreteDynamics : public FunctionBase {
@@ -153,14 +145,14 @@ class DiscreteDynamics : public FunctionBase {
 
   int OutputDimension() const override { return StateDimension(); }
 
-  // New Interface
+  // 新接口
   virtual void Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t, float h,
                         Eigen::Ref<VectorXd> xdot) = 0;
   virtual void Jacobian(const VectorXdRef& x, const VectorXdRef& u, float t, float h, Eigen::Ref<MatrixXd> jac) = 0;
   virtual void Hessian(const VectorXdRef& x, const VectorXdRef& u, float t, float h, const VectorXdRef& b,
                        Eigen::Ref<MatrixXd> hess) = 0;
 
-  // Convenience methods
+  // 便捷方法
   VectorXd Evaluate(const VectorXdRef& x, const VectorXdRef& u, float t, float h);
   VectorXd operator()(const VectorXdRef& x, const VectorXdRef& u, float t, float h);
 

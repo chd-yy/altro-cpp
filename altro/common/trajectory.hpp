@@ -12,14 +12,13 @@
 namespace altro {
 
 /**
- * @brief Represents a state and control trajectory
+ * @brief 表示状态和控制轨迹
  *
- * If the number of states or controls across the trajectory is not constant
- * the associated type parameter can be set to Eigen::Dynamic.
+ * 如果轨迹中状态或控制的数量不是常数，可以将关联的类型参数设置为 Eigen::Dynamic。
  *
- * @tparam n size of the state vector. Can be Eigen::Dynamic.
- * @tparam m size of the control vector. Can be Eigen::Dynamic.
- * @tparam T floating precision of state and control vectors
+ * @tparam n 状态向量大小。可以是 Eigen::Dynamic。
+ * @tparam m 控制向量大小。可以是 Eigen::Dynamic。
+ * @tparam T 状态和控制向量的浮点精度
  */
 template <int n, int m, class T = double>
 class Trajectory {
@@ -28,10 +27,9 @@ class Trajectory {
 
  public:
   /**
-   * @brief Construct a new Trajectory object of size N
+   * @brief 构造大小为 N 的新轨迹对象
    *
-   * @param N the number of segments in the trajectory. This means there are
-   * N+1 state vectors and N control vectors.
+   * @param N 轨迹中的段数。这意味着有 N+1 个状态向量和 N 个控制向量。
    */
   explicit Trajectory(int N) : traj_(N+1) {}
   explicit Trajectory(int _n, int _m, int N)
@@ -39,11 +37,11 @@ class Trajectory {
   explicit Trajectory(std::vector<KnotPoint<n, m, T>> zs) : traj_(zs) {}
 
   /**
-   * @brief Construct a new Trajectory object from state, control and times
+   * @brief 从状态、控制和时间构造新的轨迹对象
    *
-   * @param X (N+1,) vector of states
-   * @param U (N,) vector of controls
-   * @param times (N+1,) vector of times
+   * @param X (N+1,) 状态向量
+   * @param U (N,) 控制向量
+   * @param times (N+1,) 时间向量
    */
   Trajectory(std::vector<VectorN<n, T>> X, std::vector<VectorN<m, T>> U,
              std::vector<float> times) {
@@ -63,21 +61,21 @@ class Trajectory {
   }
 
 
-  /***************************** Copying **************************************/
+  /***************************** 复制 **************************************/
   Trajectory(const Trajectory& Z) : traj_(Z.traj_) {}
   Trajectory& operator=(const Trajectory& Z) {
     traj_ = Z.traj_;
     return *this;
   }
 
-  /***************************** Moving ***************************************/
+  /***************************** 移动 ***************************************/
   Trajectory(Trajectory&& Z) noexcept : traj_(std::move(Z.traj_)) {}
   Trajectory& operator=(Trajectory&& Z) noexcept {
     traj_ = std::move(Z.traj_);
     return *this;
   }
 
-  /*************************** Iteration **************************************/
+  /*************************** 迭代 **************************************/
   using iterator = typename std::vector<KnotPoint<n,m>>::iterator ;
   using const_iterator = typename std::vector<KnotPoint<n,m>>::const_iterator;
   iterator begin() { return traj_.begin(); }
@@ -85,7 +83,7 @@ class Trajectory {
   iterator end() { return traj_.end(); }
   const_iterator end() const { return traj_.end(); }
 
-  /*************************** Getters ****************************************/
+  /*************************** 获取器 ****************************************/
   int NumSegments() const { return traj_.size() - 1; }
   StateVector& State(int k) { return traj_[k].State(); }
   ControlVector& Control(int k) { return traj_[k].Control(); }
@@ -103,10 +101,10 @@ class Trajectory {
   T GetTime(int k) const { return traj_[k].GetTime(); }
   float GetStep(int k) const { return traj_[k].GetStep(); }
 
-  /*************************** Setters ****************************************/
+  /*************************** 设置器 ****************************************/
 
   /**
-   * @brief Set the states and controls to zero 
+   * @brief 将状态和控制设置为零
    * 
    */
   void SetZero() {
@@ -130,10 +128,10 @@ class Trajectory {
   }
 
   /**
-   * @brief Check if the times and time steps are consistent
+   * @brief 检查时间和时间步长是否一致
    *
-   * @param eps tolerance check for float comparison
-   * @return true if t[k+1] - t[k] == h[k] for all k
+   * @param eps 浮点比较的容差检查
+   * @return 如果对所有 k 都有 t[k+1] - t[k] == h[k] 则返回 true
    */
   bool CheckTimeConsistency(const double eps = 1e-6,
                             const bool verbose = false) {

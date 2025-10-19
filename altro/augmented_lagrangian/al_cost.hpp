@@ -14,23 +14,20 @@ namespace altro {
 namespace augmented_lagrangian {
 
 /**
- * @brief An augmented Lagrangian cost function, which adds the linear and
- * quadratic penalty costs to an existing cost function.
+ * @brief 增广拉格朗日代价函数，在现有代价函数基础上添加线性和二次惩罚代价。
  *
- * It defines a cost of the following form
+ * 它定义了以下形式的代价函数：
  * \f[
  * f(x,u) + \frac{1}{2 \rho} (|| \Pi_{K^*}(\lambda - \rho c(x, u)) ||_2^2 - || \lambda ||_2^2)
  * \f]
- * where \f$ \lambda \in \mathbb{R}^p \f$ are the Lagrange multipliers,
- * \f$ \rho > 0 \in \mathbb{R} \f$ is a penalty parameter, and \f$ \Pi_{K^*}(\cdot) \f$ is
- * the projection operator for the dual cone \f$ K^* \f$. For equality constraints
- * this is simply the identity mapping.
+ * 其中 \f$ \lambda \in \mathbb{R}^p \f$ 是拉格朗日乘子，
+ * \f$ \rho > 0 \in \mathbb{R} \f$ 是惩罚参数，\f$ \Pi_{K^*}(\cdot) \f$ 是
+ * 对偶锥 \f$ K^* \f$ 的投影算子。对于等式约束，这简单地是恒等映射。
  *
- * The constraints are stored as ConstraintValues, which internally store the
- * dual variables and penalty parameters.
+ * 约束存储为 ConstraintValues，内部存储对偶变量和惩罚参数。
  *
- * @tparam n Compile-time state dimension.
- * @tparam m Compile-time control dimension.
+ * @tparam n 编译时状态维度。
+ * @tparam m 编译时控制维度。
  */
 template <int n, int m>
 class ALCost : public problem::CostFunction {
@@ -42,13 +39,12 @@ class ALCost : public problem::CostFunction {
   ALCost(const int state_dim, const int control_dim) : n_(state_dim), m_(control_dim) { Init(); }
 
   /**
-   * @brief Construct a new ALCost object from a Problem
+   * @brief 从问题对象构造新的 ALCost 对象
    *
-   * Generates an ALCost by combining the cost function and constraints at the specified knot point
-   * index, excluding the dynamics constraints.
+   * 通过组合指定节点索引处的代价函数和约束来生成 ALCost，排除动力学约束。
    *
-   * @param prob Description of the constrained trajectory optimization problem
-   * @param k Index of the knot point. 0 <= k <= prob.NumSegments()
+   * @param prob 约束轨迹优化问题的描述
+   * @param k 节点索引。0 <= k <= prob.NumSegments()
    */
   ALCost(const problem::Problem& prob, const int k)
       : n_(prob.GetDynamics(k)->StateDimension()), m_(prob.GetDynamics(k)->ControlDimension()) {
@@ -71,10 +67,9 @@ class ALCost : public problem::CostFunction {
   ConstraintValueVec<constraints::Inequality>& GetInequalityConstraints() { return ineq_; }
 
   /**
-   * @brief Calculate the length of the constraint vector associated with the cost function.
+   * @brief 计算与代价函数关联的约束向量长度。
    *
-   * @return int Length of the constraint vector, including all constraint types (equalities,
-   * inequalities, conic, etc.)
+   * @return int 约束向量长度，包括所有约束类型（等式、不等式、锥约束等）
    */
   int NumConstraints() {
     int p = 0;
@@ -90,10 +85,9 @@ class ALCost : public problem::CostFunction {
   std::shared_ptr<problem::CostFunction> GetCostFunction() { return costfun_; }
 
   /**
-   * @brief Append the constraint info for all the constraints in the cost.
+   * @brief 为代价函数中的所有约束添加约束信息。
    * 
-   * @param coninfo A vector of constraint info. The constraint info for the
-   * current cost is appended on to the end of the vector.
+   * @param coninfo 约束信息向量。当前代价的约束信息被添加到向量末尾。
    */
   void GetConstraintInfo(std::vector<constraints::ConstraintInfo>* coninfo) {
     for (const auto& conval : eq_) {
@@ -107,30 +101,30 @@ class ALCost : public problem::CostFunction {
   /***************************** Setters **************************************/
 
   /**
-   * @brief Assign the nominal cost function
+   * @brief 分配标称代价函数
    *
-   * @param costfun Pointer to an instantiation of the CostFunction interface.
+   * @param costfun 指向 CostFunction 接口实例的指针。
    */
   void SetCostFunction(const std::shared_ptr<problem::CostFunction>& costfun) {
     ALTRO_ASSERT(costfun != nullptr, "Cost function cannot be a nullptr.");
     costfun_ = costfun;
   }
 
-  // TODO(bjackson): Find a way to unify these by templating over the ConType.
-  // Non-trivial since it requires specialization of a method within a generic template class.
+  // TODO(bjackson): 找到通过 ConType 模板化来统一这些的方法。
+  // 非平凡，因为它需要在泛型模板类中特化方法。
 
   /**
-   * @brief Assign the equality constraints
+   * @brief 分配等式约束
    *
-   * Accepts an arbitrary iterator pair. When de-referenced, the iterator must return a
-   * std::shared_ptr<Constraint<Equality>>.
+   * 接受任意迭代器对。当解引用时，迭代器必须返回
+   * std::shared_ptr<Constraint<Equality>>。
    *
-   * Creates a ConstraintValues type for each constraint, where the constraint values, Jacobian,
-   * dual variables, and penalty parameters associated with the constraint are stored.
+   * 为每个约束创建 ConstraintValues 类型，其中存储与约束关联的约束值、雅可比矩阵、
+   * 对偶变量和惩罚参数。
    *
-   * @tparam Iterator An iterator over pointers to equality constraints. Must be copyable.
-   * @param begin Starting iterator
-   * @param end Terminal iterator.
+   * @tparam Iterator 指向等式约束指针的迭代器。必须可复制。
+   * @param begin 起始迭代器
+   * @param end 终止迭代器。
    */
   template <class Iterator>
   void SetEqualityConstraints(const Iterator& begin, const Iterator& end) {
@@ -140,17 +134,17 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Assign the inequality constraints
+   * @brief 分配不等式约束
    *
-   * Accepts an arbitrary iterator pair. When de-referenced, the iterator must return a
-   * std::shared_ptr<Constraint<Inequality>>.
+   * 接受任意迭代器对。当解引用时，迭代器必须返回
+   * std::shared_ptr<Constraint<Inequality>>。
    *
-   * Creates a ConstraintValues type for each constraint, where the constraint values, Jacobian,
-   * dual variables, and penalty parameters associated with the constraint are stored.
+   * 为每个约束创建 ConstraintValues 类型，其中存储与约束关联的约束值、雅可比矩阵、
+   * 对偶变量和惩罚参数。
    *
-   * @tparam Iterator An iterator over pointers to inequality constraints. Must be copyable.
-   * @param begin Starting iterator
-   * @param end Terminal iterator.
+   * @tparam Iterator 指向不等式约束指针的迭代器。必须可复制。
+   * @param begin 起始迭代器
+   * @param end 终止迭代器。
    */
   template <class Iterator>
   void SetInequalityConstraints(const Iterator& begin, const Iterator& end) {
@@ -160,13 +154,13 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Set the Penalty parameter for a specific constraint.
+   * @brief 为特定约束设置惩罚参数。
    *
-   * Applies to all of the elements of that constraint.
+   * 适用于该约束的所有元素。
    *
-   * @tparam ConType Constraint type
-   * @param rho Penalty parameter (rho > 0).
-   * @param i Constraint index. 0 <= i <= NumConstraintFunctions<ConType>().
+   * @tparam ConType 约束类型
+   * @param rho 惩罚参数 (rho > 0)。
+   * @param i 约束索引。0 <= i <= NumConstraintFunctions<ConType>()。
    */
   template <class ConType>
   void SetPenalty(const double rho, const int i) {
@@ -181,10 +175,10 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Set the same penalty parameter for all constraints of the same type
+   * @brief 为相同类型的所有约束设置相同的惩罚参数
    *
-   * @tparam ConType Constraint type
-   * @param rho Penalty parameter (rho > 0);
+   * @tparam ConType 约束类型
+   * @param rho 惩罚参数 (rho > 0)；
    */
   template <class ConType>
   void SetPenalty(const double rho) {
@@ -195,12 +189,12 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Set the Penalty scaling parameter.
+   * @brief 设置惩罚缩放参数。
    *
-   * The penalty scaling is the multiplicative factor by which the penalties are updated.
+   * 惩罚缩放是惩罚参数更新的乘性因子。
    *
-   * @tparam ConType Constraint type.
-   * @param phi Penalty scaling parameter (phi > 1).
+   * @tparam ConType 约束类型。
+   * @param phi 惩罚缩放参数 (phi > 1)。
    * @param i
    */
   template <class ConType>
@@ -216,11 +210,10 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Set the same penalty scaling parameter for all constraints of the same
-   * type
+   * @brief 为相同类型的所有约束设置相同的惩罚缩放参数
    *
-   * @tparam ConType Constraint type
-   * @param rho Penalty scaling parameter (phi > 1).
+   * @tparam ConType 约束类型
+   * @param rho 惩罚缩放参数 (phi > 1)。
    */
   template <class ConType>
   void SetPenaltyScaling(const double phi) {
@@ -231,13 +224,12 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Get the number of constraint functions of a particular type
+   * @brief 获取特定类型约束函数的数量
    *
-   * NumConstraintFunctions() <=  NumConstraints() (equality only when the
-   * output dimension of each constraint function is 1).
+   * NumConstraintFunctions() <=  NumConstraints() （仅当每个约束函数的输出维度为 1 时相等）。
    *
-   * @tparam ConType Type of constraint function (e.g. Equality, Inequality, etc.)
-   * @return int Number of constraint functions.
+   * @tparam ConType 约束函数类型（例如 Equality、Inequality 等）
+   * @return int 约束函数数量。
    */
   template <class ConType>
   int NumConstraintFunctions() {
@@ -253,13 +245,13 @@ class ALCost : public problem::CostFunction {
   /***************************** Methods **************************************/
 
   /**
-   * @brief Evaluate the augmented Lagrangian cost
+   * @brief 评估增广拉格朗日代价
    *
-   * @param x State vector
-   * @param u Control vector
-   * @return double Nominal cost plus the extra terms from the constraint penalties.
+   * @param x 状态向量
+   * @param u 控制向量
+   * @return double 标称代价加上约束惩罚的额外项。
    *
-   * @pre The cost function must be set prior to calling this function.
+   * @pre 在调用此函数之前必须设置代价函数。
    */
   double Evaluate(const VectorXdRef& x, const VectorXdRef& u) override {
     ALTRO_ASSERT(costfun_ != nullptr, "Cost function must be set before evaluating.");
@@ -308,7 +300,7 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Apply the dual update to all of the constraints
+   * @brief 对所有约束应用对偶更新
    *
    */
   void UpdateDuals() {
@@ -321,7 +313,7 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Apply the penalty update to all of the constraints
+   * @brief 对所有约束应用惩罚更新
    *
    */
   void UpdatePenalties() {
@@ -334,11 +326,10 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Find the maximum constraint violation for the current knot
-   * point
+   * @brief 查找当前节点的最大约束违反
    *
-   * @tparam p Norm to use when calculating the violation (default is Infinity)
-   * @return Maximum constraint violation
+   * @tparam p 计算违反时使用的范数（默认为 Infinity）
+   * @return 最大约束违反
    */
   template <int p = Eigen::Infinity>
   double MaxViolation() {
@@ -353,10 +344,9 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Find the maximum penalty parameter being used by any of the
-   * constraints at the current knot point.
+   * @brief 查找当前节点任何约束使用的最大惩罚参数。
    *
-   * @return Maximum penalty parameter across all constraints.
+   * @return 所有约束中的最大惩罚参数。
    */
   double MaxPenalty() {
     double max_penalty = 0.0;
@@ -380,15 +370,14 @@ class ALCost : public problem::CostFunction {
 
  private:
   /**
-   * @brief Allocates a new ConstraintValue for an arbitrary constraint, storing
-   * the pointer in appropriately-typed vector.
+   * @brief 为任意约束分配新的 ConstraintValue，将指针存储在适当类型的向量中。
    *
    *
-   * @tparam Iterator An arbitrary iterator over pointers to constraints. Must be copyable.
-   * @tparam ConType Type of contraint (Equality, Inequality, etc.)
-   * @param begin Beginning iterator.
-   * @param end Terminal iterator.
-   * @param convals Container for storing the new ContraintValue.
+   * @tparam Iterator 指向约束指针的任意迭代器。必须可复制。
+   * @tparam ConType 约束类型（Equality、Inequality 等）
+   * @param begin 起始迭代器。
+   * @param end 终止迭代器。
+   * @param convals 用于存储新 ConstraintValue 的容器。
    */
   template <class Iterator, class ConType>
   void CopyToConstraintValues(
@@ -402,7 +391,7 @@ class ALCost : public problem::CostFunction {
   }
 
   /**
-   * @brief Allocate the temporary storage arrays.
+   * @brief 分配临时存储数组。
    *
    */
   void Init() {
@@ -415,22 +404,22 @@ class ALCost : public problem::CostFunction {
 
   std::shared_ptr<problem::CostFunction> costfun_;
 
-  // Constraints
+  // 约束
   ConstraintValueVec<constraints::Equality> eq_;
   ConstraintValueVec<constraints::Inequality> ineq_;
 
   const int n_;
   const int m_;
 
-  // Flag for using full/Gauss newton
-  // TODO(bjackson): Add an option to change this, and use it in the expansion.
+  // 使用完整/高斯牛顿的标志
+  // TODO(bjackson): 添加选项来更改此设置，并在展开中使用它。
   bool full_newton_ = false;
 
   VectorXd eq_tmp_;
   VectorXd ineq_tmp_;
 
-  // Arrays for collecting the cost expansion before adding
-  // must be mutable since the CostFunction interface requires a const method
+  // 用于在添加之前收集代价展开的数组
+  // 必须是可变的，因为 CostFunction 接口需要 const 方法
   VectorNd<n> dx_tmp_;
   VectorNd<m> du_tmp_;
   MatrixNxMd<n, n> dxdx_tmp_;

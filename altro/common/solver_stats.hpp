@@ -12,10 +12,9 @@ namespace altro {
 
 
 /**
- * @brief Describes the current state of the solver
+ * @brief 描述求解器的当前状态
  *
- * Used to describe if the solver successfully solved the problem or to
- * provide a reason why it was unsuccessful.
+ * 用于描述求解器是否成功求解问题或提供失败的原因。
  */
 enum class SolverStatus {
   kSolved = 0,
@@ -31,14 +30,12 @@ enum class SolverStatus {
 };
 
 /**
- * @brief Holds statistics recorded during the solve
+ * @brief 保存求解过程中记录的统计信息
  * 
- * This class also provides functionality to output data to the terminal,
- * with varying levels of verbosity.
+ * 此类还提供以不同详细程度级别向终端输出数据的功能。
  * 
- * Any new data fields to be recorded and printed via the logger should be 
- * "registered" with the logger in DefaultLogger(). Not all data fields in this
- * struct need to be "registered" with the logger.
+ * 要通过日志记录器记录和打印的任何新数据字段都应该在 DefaultLogger() 中
+ * "注册"到日志记录器。此结构中的所有数据字段都不需要"注册"到日志记录器。
  * 
  */
 class SolverStats {
@@ -53,49 +50,48 @@ class SolverStats {
   int iterations_total = 0;
   std::vector<double> cost;
   std::vector<double> alpha;
-  std::vector<double> improvement_ratio;  // ratio of actual to expected cost decrease
+  std::vector<double> improvement_ratio;  // 实际与预期代价下降的比率
   std::vector<double> gradient;
   std::vector<double> cost_decrease;
   std::vector<double> regularization;
-  std::vector<double> violations;     // The maximum constraint violation for each AL iteration
-  std::vector<double> max_penalty;    // Maximum penalty parameter for each AL iteration
+  std::vector<double> violations;     // 每次 AL 迭代的最大约束违反
+  std::vector<double> max_penalty;    // 每次 AL 迭代的最大惩罚参数
 
   /**
-   * @brief Set the cost, constraint, and gradient tolerances for the output.
+   * @brief 设置输出的代价、约束和梯度容差。
    * 
-   * Any logged valued below these tolerances will be printed in green.
+   * 低于这些容差的任何记录值将以绿色打印。
    * 
-   * @param cost Cost tolerance, or the change in cost between iterations.
-   * @param viol Maximum constraint violation.
-   * @param grad Max norm of the gradient.
+   * @param cost 代价容差，或迭代间代价的变化。
+   * @param viol 最大约束违反。
+   * @param grad 梯度的最大范数。
    */
   void SetTolerances(const double& cost, const double& viol, const double& grad);
 
   /**
-   * @brief Set the capacity of the internally-stored vectors
+   * @brief 设置内部存储向量的容量
    * 
-   * @param n Size to allocate, generally equal to the maximum number of iterations.
+   * @param n 要分配的大小，通常等于最大迭代次数。
    */
   void SetCapacity(int n);
 
   /**
-   * @brief Reset the statistics, clearing all the vectors and resetting all
-   * counters to zero.
+   * @brief 重置统计信息，清除所有向量并将所有计数器重置为零。
    * 
    */
   void Reset();
 
   /**
-   * @brief Set the verbosity level for the console logger
+   * @brief 设置控制台日志记录器的详细程度级别
    * 
    * @param level 
    */
   void SetVerbosity(const LogLevel level) { logger_.SetLevel(level); }
 
   /**
-   * @brief Get the verbosity of the console logger
+   * @brief 获取控制台日志记录器的详细程度
    * 
-   * @return Current verbosity level
+   * @return 当前详细程度级别
    */
   LogLevel GetVerbosity() const { return logger_.GetLevel(); }
   SolverLogger& GetLogger() { return logger_; }
@@ -107,27 +103,23 @@ class SolverStats {
   std::string ProfileOutputFile();
 
   /**
-   * @brief Print the last iteration to the console
+   * @brief 将最后一次迭代打印到控制台
    * 
    */
   void PrintLast() { logger_.Print(); }
 
   /**
-   * @brief Log the data
+   * @brief 记录数据
    * 
-   * This command does 2 things:
-   * 1) It attempts to send the value to logger, where it will formatted into a 
-   * string and stored for later printing.
-   * 2) It stashes the value in the corresponding storage vector, always saving 
-   * to the last element of the vector.
+   * 此命令执行 2 件事：
+   * 1) 它尝试将值发送到日志记录器，在那里它将被格式化为字符串并存储以供稍后打印。
+   * 2) 它将值存储在相应的存储向量中，总是保存到向量的最后一个元素。
    * 
-   * This function will overwrite the previous value if called multiple times 
-   * between calls to NewIteration().
+   * 如果在调用 NewIteration() 之间多次调用此函数，它将覆盖先前的值。
    * 
-   * @tparam T data type of the value to be logged. Should be consistent with the data field.
-   * @param title Title of the value to be logged. This is the same as the header printed in 
-   * the console.
-   * @param value Value to be logged.
+   * @tparam T 要记录的值的数据类型。应与数据字段一致。
+   * @param title 要记录的值的标题。这与控制台中打印的标题相同。
+   * @param value 要记录的值。
    */
   template <class T>
   void Log(const std::string& title, T value) {
@@ -136,8 +128,7 @@ class SolverStats {
   }
 
   /**
-   * @brief Advance the data forward by one iteration, effectively saving 
-   * all the current data.
+   * @brief 将数据向前推进一次迭代，有效地保存所有当前数据。
    * 
    */
   void NewIteration();
@@ -149,25 +140,23 @@ class SolverStats {
  private:
 
   /**
-   * @brief Saves the data in the corresponding vector.
+   * @brief 将数据保存在相应的向量中。
    * 
-   * @tparam T data type of the value to be logged.
-   * @param title Title of the log entry. Corresponds with the header printed 
-   * to the console.
-   * @param value Value to be saved.
+   * @tparam T 要记录的值的数据类型。
+   * @param title 日志条目的标题。与控制台中打印的标题对应。
+   * @param value 要保存的值。
    */
   template <class T>
   void SetData(const std::string& title, T value);
 
   /**
-   * @brief Create an entry in floats_ that maps the title key to one of the publically-accessible
-   * vectors. 
+   * @brief 在 floats_ 中创建一个条目，将标题键映射到公开可访问的向量之一。
    * 
-   * This method is called when setting up the SolverStats object.
+   * 在设置 SolverStats 对象时调用此方法。
    * 
-   * @tparam T Data type of the entry field (doubles or ints).
-   * @param entry Entry field to which the data vector is to be associated.
-   * @param data One of the publically-accessible vectors stored in this class.
+   * @tparam T 条目字段的数据类型（double 或 int）。
+   * @param entry 数据向量要关联的条目字段。
+   * @param data 存储在此类中的公开可访问向量之一。
    */
   template <class T>
   void SetPtr(const LogEntry& entry, std::vector<T>& data) {
@@ -176,7 +165,7 @@ class SolverStats {
   }
 
   /**
-   * @brief Create the default logging fields
+   * @brief 创建默认日志记录字段
    * 
    */
   void DefaultLogger();

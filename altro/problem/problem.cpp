@@ -39,7 +39,7 @@ bool Problem::IsFullyDefined(const bool verbose) const {
   return valid;
 }
 
-// Specialize the method for each constraint type
+// 针对每种约束类型进行方法特化
 template <>
 void Problem::SetConstraint<constraints::Equality>(
     std::shared_ptr<constraints::Constraint<constraints::Equality>> con, int k) {

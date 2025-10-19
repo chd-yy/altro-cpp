@@ -8,11 +8,11 @@ namespace altro {
 namespace utils {
   
 /**
- * @brief Informative assertion that allows the developer to include a message
+ * @brief 带信息的断言，允许开发者附带自定义消息
  *
- * Usually invoked via the ALTRO_ASSERT(expr, msg) macro.
+ * 通常通过 ALTRO_ASSERT(expr, msg) 宏调用。
  *
- * Inspired by this StackOverflow post:
+ * 灵感来源于此 StackOverflow 回答：
  * https://stackoverflow.com/questions/3692954/add-custom-messages-in-assert/3692961
  */
 void AssertMsg(bool expr, const std::string& msg, const char *expr_str, int line,

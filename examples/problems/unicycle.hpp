@@ -33,7 +33,7 @@ class UnicycleProblem {
 	using ModelType = altro::problem::DiscretizedModel<altro::examples::Unicycle>;
 	using CostFunType = altro::examples::QuadraticCost;
 
-  // Problem Data
+  // 问题数据
   static constexpr int HEAP = Eigen::Dynamic;
   const int n = NStates;
   const int m = NControls;
@@ -51,11 +51,11 @@ class UnicycleProblem {
   std::shared_ptr<examples::QuadraticCost> qcost;
   std::shared_ptr<examples::QuadraticCost> qterm;
 
-  double v_bnd = 1.5;  // linear velocity bound
-  double w_bnd = 1.5;  // angular velocity bound
-  Eigen::VectorXd cx;  // x-coordinates of obstacles
-  Eigen::VectorXd cy;  // y-coordinates of obstacles
-  Eigen::VectorXd cr;  // radii of obstacles
+  double v_bnd = 1.5;  // 线速度上限
+  double w_bnd = 1.5;  // 角速度上限
+  Eigen::VectorXd cx;  // 障碍物的 x 坐标
+  Eigen::VectorXd cy;  // 障碍物的 y 坐标
+  Eigen::VectorXd cr;  // 障碍物半径
   std::vector<double> lb;
   std::vector<double> ub;
   altro::examples::CircleConstraint obstacles;

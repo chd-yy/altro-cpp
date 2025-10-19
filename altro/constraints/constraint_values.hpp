@@ -12,14 +12,13 @@ namespace altro {
 namespace constraints {
 
 /**
- * @brief A constraint that also allocates memory for constraint values, Jacobians,
- * dual variables, etc.
+ * @brief 一个约束，还为约束值、雅可比矩阵、对偶变量等分配内存。
  *
- * This class also provides methods for evaluating terms such as the augmented Lagrangian.
+ * 此类还提供评估增广拉格朗日等项的方法。
  *
- * @tparam n Compile-time state dimension
- * @tparam m Compile-time control dimension
- * @tparam ConType Type of constraint (equality, inequality, conic, etc.)
+ * @tparam n 编译时状态维度
+ * @tparam m 编译时控制维度
+ * @tparam ConType 约束类型（等式、不等式、锥形等）
  */
 template <int n, int m, class ConType>
 class ConstraintValues : public Constraint<ConType> {
@@ -29,12 +28,11 @@ class ConstraintValues : public Constraint<ConType> {
  public:
   static constexpr double kDefaultPenaltyScaling = 10.0;
   /**
-   * @brief Construct a new Constraint Values object
+   * @brief 构造新的约束值对象
    *
-   * @param state_dim state dimension
-   * @param control_dim  control dimension
-   * @param con Pointer to a constraint. Assumes that the constraint function
-   * can be evaluated with inputs that are consistent with state_dim and control_dim
+   * @param state_dim 状态维度
+   * @param control_dim  控制维度
+   * @param con 指向约束的指针。假设约束函数可以用与 state_dim 和 control_dim 一致的输入进行评估
    */
   ConstraintValues(const int state_dim, const int control_dim, ConstraintPtr<ConType> con)
       : n_(state_dim), m_(control_dim), con_(std::move(con)) {
@@ -50,7 +48,7 @@ class ConstraintValues : public Constraint<ConType> {
     jac_proj_.setZero(output_dim, state_dim + control_dim);
   }
 
-  /***************************** Getters **************************************/
+  /***************************** 获取器 **************************************/
   int StateDimension() const override { return n_; }
   int ControlDimension() const override { return m_; }
 
@@ -70,11 +68,11 @@ class ConstraintValues : public Constraint<ConType> {
     return ConstraintInfo{con_->GetLabel(), 0, GetViolation(), con_->GetConstraintType()};
   }
 
-  /***************************** Setters **************************************/
+  /***************************** 设置器 **************************************/
   /**
-   * @brief Set the same penalty for all constraints
+   * @brief 为所有约束设置相同的惩罚
    *
-   * @param rho Penalty value. rho >= 0.
+   * @param rho 惩罚值。rho >= 0。
    */
   void SetPenalty(double rho) {
     ALTRO_ASSERT(rho >= 0, "Penalty must be positive.");
@@ -86,27 +84,26 @@ class ConstraintValues : public Constraint<ConType> {
     penalty_scaling_ = phi; 
   }
 
-  /***************************** Methods **************************************/
+  /***************************** 方法 **************************************/
   /**
-   * @brief Evaluate the augmented Lagrangian
+   * @brief 评估增广拉格朗日
    *
-   * The augmented Lagrangian for an optimization problem of the form:
+   * 形式为以下优化问题的增广拉格朗日：
    * \f{aligned}{
    *   \text{minimize} &&& f(x) \\
    *   \text{subject to} &&& c(x) \in K \\
    * \f}
    *
-   * is defined to be
+   * 定义为
    * \f[
    * f(x) + \frac{1}{2 \rho} (||\Pi_{K^*}(\lambda - \rho c(x))||_2^2 - ||\lambda||_2^2)
    * \f]
-   * where \f$ \lambda \f$ are the Lagrange multipliers (dual variables), \f$ \rho \f$ is a scalar
-   * penalty parameter, and \f$ \Pi_{K^*} \f$ is the projection operator for the dual cone \f$ K^*
-   * \f$.
+   * 其中 \f$ \lambda \f$ 是拉格朗日乘数（对偶变量），\f$ \rho \f$ 是标量惩罚参数，
+   * \f$ \Pi_{K^*} \f$ 是对偶锥 \f$ K^* \f$ 的投影算子。
    *
-   * @param x State vector
-   * @param u Control vector
-   * @return The augmented Lagrangian for the current knot point, evaluated at x and u.
+   * @param x 状态向量
+   * @param u 控制向量
+   * @return 当前节点在 x 和 u 处评估的增广拉格朗日。
    */
   double AugLag(const VectorXdRef& x, const VectorXdRef& u) {
     const double rho = penalty_(0);
@@ -119,14 +116,14 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief The gradient of the Augmented Lagrangian
+   * @brief 增广拉格朗日的梯度
    *
-   * Uses the Jacobian of the projection operator for the dual cone.
+   * 使用对偶锥投影算子的雅可比矩阵。
    *
-   * @param[in] x State vector
-   * @param[in] u Control vector
-   * @param[out] dx Gradient with respect to the states.
-   * @param[out] du Gradient with respect to the controls.
+   * @param[in] x 状态向量
+   * @param[in] u 控制向量
+   * @param[out] dx 关于状态的梯度。
+   * @param[out] du 关于控制的梯度。
    */
   void AugLagGradient(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<VectorXd> dx,
                       Eigen::Ref<VectorXd> du) {
@@ -142,16 +139,15 @@ class ConstraintValues : public Constraint<ConType> {
     du = -(proj_jac_ * jac_.topRightCorner(output_dim, this->m_)).transpose() * lambda_proj_;
   }
   /**
-   * @brief The Hessian of the Augmented Lagrangian
+   * @brief 增广拉格朗日的 Hessian 矩阵
    *
-   * Uses the Jacobian of the Jacobian-transpose-vector-product of the projection operator for the
-   * dual cone and the constraint.
+   * 使用对偶锥和约束的投影算子的雅可比转置向量积的雅可比矩阵。
    *
-   * @param[in] x State vector
-   * @param[in] u Control vector
-   * @param[out] dxdx Hessian with respect to the states.
-   * @param[out] dxdu Hessian cross-term with respect to the state and controls.
-   * @param[out] dudu Hessian with respect to the controls.
+   * @param[in] x 状态向量
+   * @param[in] u 控制向量
+   * @param[out] dxdx 关于状态的 Hessian 矩阵。
+   * @param[out] dxdu 关于状态和控制的 Hessian 交叉项。
+   * @param[out] dudu 关于控制的 Hessian 矩阵。
    */
   void AugLagHessian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<MatrixXd> dxdx,
                      Eigen::Ref<MatrixXd> dxdu, Eigen::Ref<MatrixXd> dudu, const bool full_newton) {
@@ -177,13 +173,12 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief Update the dual variables
+   * @brief 更新对偶变量
    * 
-   * Updates the dual variables using the current constraint and penalty values.
-   * The resulting dual variables are projected back into the dual cone such that
-   * they are always guaranteed to be feasible with respect to the dual cone.
+   * 使用当前约束和惩罚值更新对偶变量。
+   * 结果对偶变量被投影回对偶锥，使得它们总是保证相对于对偶锥可行。
    * 
-   * The update is of the form:
+   * 更新形式为：
    * \f[
    * \lambda^+ - \Pi_{K^*}(\lambda - \rho c)
    * \f]
@@ -194,9 +189,9 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief Update the penalty parameters
+   * @brief 更新惩罚参数
    * 
-   * For now just does a naive uniform geometric increase.
+   * 目前只是进行简单的均匀几何增长。
    * 
    */
   void UpdatePenalties() {
@@ -207,10 +202,10 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief Calculate the maximum constraint violation
+   * @brief 计算最大约束违反
    * 
-   * @tparam p The norm to use when calculating the violation (default = Infinity)
-   * @return Maximum constraint violation 
+   * @tparam p 计算违反时使用的范数（默认 = Infinity）
+   * @return 最大约束违反
    */
   template <int p = Eigen::Infinity>
   double MaxViolation() {
@@ -220,9 +215,9 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief Find the maximum penalty
+   * @brief 查找最大惩罚
    * 
-   * @return The maximum penalty parameter 
+   * @return 最大惩罚参数
    */
   double MaxPenalty() { return penalty_.maxCoeff(); }
 
@@ -239,12 +234,12 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
   /**
-   * @brief Evaluate the constraint and it's derivatives
+   * @brief 评估约束及其导数
    *
-   * Stores the result internally.
+   * 在内部存储结果。
    *
-   * @param[in] x State vector
-   * @param[in] u Control vector
+   * @param[in] x 状态向量
+   * @param[in] u 控制向量
    */
   void CalcExpansion(const VectorXdRef& x, const VectorXdRef& u) {
     con_->Evaluate(x, u, c_);
@@ -256,19 +251,19 @@ class ConstraintValues : public Constraint<ConType> {
   }
 
  private:
-  const int n_;  // state dimension
-  const int m_;  // control dimension
+  const int n_;  // 状态维度
+  const int m_;  // 控制维度
   ConstraintPtr<ConType> con_;
-  VectorNd<p> c_;            // constraint value
-  VectorNd<p> lambda_;       // Langrange multiplier
-  VectorNd<p> penalty_;      // penalty values
-  MatrixNxMd<p, n_m> jac_;    // Jacobian
-  MatrixNxMd<n_m, n_m> hess_;  // Hessian
+  VectorNd<p> c_;            // 约束值
+  VectorNd<p> lambda_;       // 拉格朗日乘数
+  VectorNd<p> penalty_;      // 惩罚值
+  MatrixNxMd<p, n_m> jac_;    // 雅可比矩阵
+  MatrixNxMd<n_m, n_m> hess_;  // Hessian 矩阵
 
-  VectorNd<p> lambda_proj_;     // projected multiplier
-  VectorNd<p> c_proj_;          // projected constraint value
-  MatrixNxMd<p, p> proj_jac_;   // Jacobian of projection operation
-  MatrixNxMd<p, n_m> jac_proj_;  // Jacobian through projection operation (jac_ * proj_jac_)
+  VectorNd<p> lambda_proj_;     // 投影乘数
+  VectorNd<p> c_proj_;          // 投影约束值
+  MatrixNxMd<p, p> proj_jac_;   // 投影操作的雅可比矩阵
+  MatrixNxMd<p, n_m> jac_proj_;  // 通过投影操作的雅可比矩阵 (jac_ * proj_jac_)
 
   double penalty_scaling_ = kDefaultPenaltyScaling;
 };

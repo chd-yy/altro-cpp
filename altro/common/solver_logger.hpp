@@ -16,46 +16,42 @@
 namespace altro {
 
 /**
- * @brief Provides a tabular-like logging output
+ * @brief 提供类似表格的日志输出
  *
- * The logger contains several different data entries (or fields / columns),
- * which can filled out between calls to the print function. The verbosity
- * can be modified at run time. It also supports simple bounds-based conditional
- * formatting on numerical data entries.
+ * 日志记录器包含几个不同的数据条目（或字段/列），可以在调用打印函数之间填充。
+ * 详细程度可以在运行时修改。它还支持基于数值数据条目简单边界的条件格式化。
  *
- * The key for each entry is the title specified by the LogEntry (the name
- * printed in the header).
+ * 每个条目的键是由 LogEntry 指定的标题（在标题中打印的名称）。
  * 
- * # Example
- * The follow example creates a simple logger with interger and floating point 
- * entries, sets the header color, the header print frequency, and logs and prints
- * some data. 
+ * # 示例
+ * 以下示例创建一个带有整数和浮点条目的简单日志记录器，设置标题颜色、
+ * 标题打印频率，并记录和打印一些数据。
  * @code {.cpp}
- * // Create logger and add entries
+ * // 创建日志记录器并添加条目
    SolverLogger logger;
    logger.AddEntry(0, "iters", "{:>4}", LogEntry::kInt).SetWidth(6).SetLevel(LogLevel::kOuterDebug);
    logger.AddEntry(1, "cost", "{:.4g}").SetLevel(LogLevel::kOuter);
 
-   // Set options
+   // 设置选项
    logger.SetHeaderColor(fmt::color::cyan);
    logger.SetFrequency(5);
    logger.SetLevel(LogLevel::kInner);
 
-   // Log data
+   // 记录数据
    logger.Log("iters", 1);
    logger.Log("cost", 10.0);
    logger.Print();
    logger.Log("iters", 2);
-   logger.Print();  // keeps "10" in "cost" column
+   logger.Print();  // 在 "cost" 列中保持 "10"
    logger.Clear() 
  * @endcode
  */
 class SolverLogger {
  public:
   /**
-   * @brief Construct a new Solver Logger object
+   * @brief 构造新的求解器日志记录器对象
    *
-   * @param level Verbosity level. A level of 0 will not print anything.
+   * @param level 详细程度级别。级别为 0 时不打印任何内容。
    */
   explicit SolverLogger(const LogLevel level = LogLevel::kSilent) : cur_level_(level) {}
 
@@ -72,34 +68,33 @@ class SolverLogger {
   const_iterator end() const { return entries_.cend(); }
 
   /**
-   * @brief Add an data entry / field / column to the logger.
+   * @brief 向日志记录器添加数据条目/字段/列。
    *
    * @tparam Args
-   * @param col Data column. Specified the column in which the data should be
-   * printed. If col >= 0, it is the 0-based column index. If col < 0, it counts
-   * backwards from the end, with col = -1 adding it as the last column.
-   * @param args Arguments to be passed to the LogEntry constructor.
+   * @param col 数据列。指定数据应打印的列。如果 col >= 0，它是基于 0 的列索引。
+   * 如果 col < 0，它从末尾向后计数，col = -1 将其添加为最后一列。
+   * @param args 传递给 LogEntry 构造函数的参数。
    */
   template <class... Args>
   LogEntry& AddEntry(const int& col, Args... args);
 
   /**
-   * @brief Set the verbosity level of the logger.
+   * @brief 设置日志记录器的详细程度级别。
    * 
    * @param level 
    */
   void SetLevel(const LogLevel level) { cur_level_ = level; }
 
   /**
-   * @brief Disable all output.
+   * @brief 禁用所有输出。
    * 
    */
   void Disable() { SetLevel(LogLevel::kSilent); }
 
   /**
-   * @brief Set the frequency at which the header is printed.
+   * @brief 设置打印标题的频率。
    * 
-   * If the frequency is set to 5, the header will be printed every 5 iterations.
+   * 如果频率设置为 5，标题将每 5 次迭代打印一次。
    * 
    * @param freq 
    */
@@ -109,64 +104,61 @@ class SolverLogger {
   }
 
   /**
-   * @brief Log the data for a given field.
+   * @brief 记录给定字段的数据。
    *
-   * It is the user's responsibility to ensure the provided data is consistent
-   * with the format spec for the given field.
+   * 用户有责任确保提供的数据与给定字段的格式规范一致。
    * 
-   * Will not log the data if the entry isn't active at the current verbosity level.
+   * 如果条目在当前详细程度级别下不活跃，则不会记录数据。
    *
-   * @tparam T data type of the given data.
-   * @param title Title of the data column to add the data to. It must be an existing data column
-   * (but can be inactive).
-   * @param value The value to be logged, formatted, and later printed out.
+   * @tparam T 给定数据的数据类型。
+   * @param title 要添加数据的数据列标题。它必须是现有的数据列（但可以是不活跃的）。
+   * @param value 要记录、格式化并稍后打印的值。
    */
   template <class T>
   void Log(const std::string& title, T value);
 
   /**
-   * @brief Print the header
+   * @brief 打印标题
    * 
-   * Prints the titles of all of the active entries, followed by a horizontal rule 
-   * and a line break.
-   * Will not print anything if the current verbosity level is 0.
+   * 打印所有活跃条目的标题，后跟水平线和换行符。
+   * 如果当前详细程度级别为 0，则不会打印任何内容。
    */
   void PrintHeader();
 
   /**
-   * @brief Print a data row
+   * @brief 打印数据行
    * 
-   * Prints the data (including conditional formatting) for all active entries.
-   * Will not print anything if the current verbosity level is 0.
+   * 打印所有活跃条目的数据（包括条件格式化）。
+   * 如果当前详细程度级别为 0，则不会打印任何内容。
    */
   void PrintData();
 
   /**
-   * @brief Automatically prints the header at a specified frequency
+   * @brief 以指定频率自动打印标题
    * 
    */
   void Print();
 
   /**
-   * @brief Clear all of the data entries in the table.
+   * @brief 清除表中的所有数据条目。
    * 
    */
   void Clear();
 
   /**
-   * @brief Set the color of the header and it's horizontal rule
+   * @brief 设置标题及其水平线的颜色
    * 
-   * @param color One of the colors provided by the fmt library 
-   * (e.g. fmt::color::green, fmt::color::yellow, fmt::color::red, fmt::color::white, etc.)
+   * @param color fmt 库提供的颜色之一
+   * （例如 fmt::color::green、fmt::color::yellow、fmt::color::red、fmt::color::white 等）
    */
   void SetHeaderColor(const fmt::color color) { header_color_ = color; }
 
  private:
   static constexpr int kDefaultFrequency = 10;
 
-  LogLevel cur_level_ = LogLevel::kSilent;   // Current verbosity level
-  int frequency_ = kDefaultFrequency;        // frequency of the header print
-  int count_ = 0;                            // number of prints since header
+  LogLevel cur_level_ = LogLevel::kSilent;   // 当前详细程度级别
+  int frequency_ = kDefaultFrequency;        // 标题打印频率
+  int count_ = 0;                            // 自标题以来的打印次数
   std::unordered_map<std::string, LogEntry> entries_;
   std::vector<const std::string*> order_;
   fmt::color header_color_ = fmt::color::white;

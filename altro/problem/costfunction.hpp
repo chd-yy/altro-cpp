@@ -12,40 +12,36 @@ namespace altro {
 namespace problem {
 
 /**
- * @brief Represents a scalar-valued cost function.
+ * @brief 表示一个标量值代价函数。
  *
- * As a specialization of the ScalarFunction interface, users are expected to
- * implement the interface described below. The key difference from the
- * `ScalarFunction` interface is that the partial derivatives with repsect to the
- * states and controls are passed in separately instead of as a single argument.
- * The original API simply passes in the appropriate portions of the joint
- * derivative.
+ * 作为 ScalarFunction 接口的特化，用户需要实现下面描述的接口。
+ * 与 `ScalarFunction` 接口的主要区别是，关于状态和控制的偏导数
+ * 是分别传递的，而不是作为单个参数传递。原始 API 只是传递联合
+ * 导数的适当部分。
  *
- * # Interface
- * The user must define the following functions:
- * - `int StateDimension() const` - number of states (length of x)
- * - `int ControlDimension() const` - number of controls (length of u)
+ * # 接口
+ * 用户必须定义以下函数：
+ * - `int StateDimension() const` - 状态数量（x的长度）
+ * - `int ControlDimension() const` - 控制数量（u的长度）
  * - `double Evaluate(const VectorXdRef& x, const VectorXdRef& u)`
  * - `void Gradient(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::VectorXd> dx,
  * Eigen::Ref<Eigen::VectorXd> du)`
  * - `void Hessian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::MatrixXd> dxdx,
  * Eigen::Ref<Eigen::MatrixXd> dxdu, Eigen::Ref<Eigen::MatrixXd> dudu)`
- * - `bool HasHessian() const` - Specify if the Hessian is implemented - optional (assumed to be
- * true)
+ * - `bool HasHessian() const` - 指定是否实现了Hessian - 可选（假设为true）
  * 
- * Where we use the following Eigen type alias:
+ * 我们使用以下Eigen类型别名：
  *    using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The user also has the option of defining the static constants:
+ * 用户还可以选择定义静态常量：
  *    static constexpr int NStates
  *    static constexpr int NControls
  *
- * which can be used to provide compile-time size information. For best performance, 
- * it is highly recommended that the user specifies these constants for their implementation.
+ * 这些可用于提供编译时大小信息。为了获得最佳性能，
+ * 强烈建议用户为其实现指定这些常量。
  * 
  * # ScalarFunction API
- * To use the ScalarFunction API, insert the following lines into the public 
- * interface of the derived class:
+ * 要使用 ScalarFunction API，请在派生类的公共接口中插入以下行：
  *    using ScalarFunction::Gradient;
  *    using ScalarFunction::Hessian;
  */
@@ -53,7 +49,7 @@ class CostFunction : public altro::ScalarFunction {
  public:
   using altro::ScalarFunction::Hessian;
 
-  // New Interface
+  // 新接口
   virtual void Gradient(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<VectorXd> dx,
                         Eigen::Ref<VectorXd> du) = 0;
   virtual void Hessian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<MatrixXd> dxdx,

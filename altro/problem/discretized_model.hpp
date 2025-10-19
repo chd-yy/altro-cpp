@@ -8,18 +8,16 @@ namespace altro {
 namespace problem {
 
 /**
- * @brief Discretizes a continuous dynamics model using an explicit integrator.
+ * @brief 使用显式积分器将连续动力学模型离散化。
  * 
- * Uses a specified integrator to integrate a continuous time dynamics model over a 
- * discrete time step.
+ * 使用指定的积分器，在一个离散时间步内对连续时间动力学模型进行积分。
  * 
- * @tparam Model Model to be discretized. Must inherit from FunctionBase.
- * @tparam Integrator An explicit integrator. Should inherit from ExplicitIntegrator.
+ * @tparam Model 需要被离散化的模型。必须继承自 FunctionBase。
+ * @tparam Integrator 显式积分器。应继承自 ExplicitIntegrator。
  * 
- * For best performance, `Model::NStates` and `Model::NControls` should provide
- * compile-time information about the number of states and controls. This will 
- * allow the integrator to allocate memory on the stack for any temporary arrays
- * needed during the integration procedure.
+ * 为获得最佳性能，应通过 `Model::NStates` 和 `Model::NControls` 提供
+ * 状态与控制数量的编译期信息。这将允许积分器在栈上为任何临时数组
+ * 分配内存，以满足积分过程中的需要。
  */
 template <class Model, class Integrator = RungeKutta4<Model::NStates, Model::NControls>>
 class DiscretizedModel : public DiscreteDynamics {

@@ -11,43 +11,37 @@ namespace altro {
 
 // clang-format off
 /**
- * @brief Represents a generic vector-valued function of the form 
- * \f[
- *   out = f(x, u)`
- * \f]
+ * @brief 表示形式为 \f[ out = f(x, u) \f] 的通用向量值函数
  *
- * At a minimum, the function must have a well-defined Jacobian. Second-order
- * information is provided by defining the Jacobian of the
- * Jacobian-transpose-vector product.
+ * 至少，函数必须具有明确定义的雅可比矩阵。通过定义雅可比转置向量积的雅可比矩阵
+ * 来提供二阶信息。
  *
- * The implemented derivatives can be checked using finite differencing using
- * `CheckJacobian` and `CheckHessian`. These functions can provided sample inputs,
- * or else will generate random inputs if none are provided.
+ * 可以使用有限差分通过 `CheckJacobian` 和 `CheckHessian` 检查实现的导数。
+ * 这些函数可以提供样本输入，否则如果没有提供则生成随机输入。
  *
- * # Interface
- * To implement this interface, the user must specify the following:
- * - `int StateDimension() const` - number of states (length of x)
- * - `int ControlDimension() const` - number of controls (length of u)
- * - `int OutputDimension() const` - size of output (length of out).
+ * # 接口
+ * 要实现此接口，用户必须指定以下内容：
+ * - `int StateDimension() const` - 状态数量（x 的长度）
+ * - `int ControlDimension() const` - 控制数量（u 的长度）
+ * - `int OutputDimension() const` - 输出大小（out 的长度）。
  * - `void Evaluate(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::VectorXd> out)`
  * - `void Jacobian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<MatrixXd> out)`
  * - `void Hessian(const VectorXdRef& x, const VectorXdRef& u, const VectorXdRef& b,
- * Eigen::Ref<Eigen::MatrixXd> hess)` - optional
- * - `bool HasHessian() const` - Specify if the Hessian is implemented
+ * Eigen::Ref<Eigen::MatrixXd> hess)` - 可选
+ * - `bool HasHessian() const` - 指定是否实现了 Hessian
  *
- * Where we use the following Eigen type alias:
+ * 我们使用以下 Eigen 类型别名：
  * 
  *      using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The user also has the option of defining the static constants:
+ * 用户还可以选择定义静态常量：
  * 
  *      static constexpr int NStates
  *      static constexpr int NControls
  *      static constexpr int NOutputs
  *
- * which can be used to provide compile-time size information. These can value
- * can be queried on run-time types using the `StateMemorySize`, `ControlMemorySize`,
- * and `OutputMemorySize` functions.
+ * 可用于提供编译时大小信息。这些值可以使用 `StateMemorySize`、`ControlMemorySize`
+ * 和 `OutputMemorySize` 函数在运行时类型上查询。
  */
 // clang-format off
 class FunctionBase {
@@ -88,43 +82,37 @@ class FunctionBase {
 
 // clang-format on
 /**
- * @brief Represents an abstract scalar-valued function
+ * @brief 表示抽象标量值函数
  *
- * A specialization of the `FunctionBase` interface to scalar-valued functions.
+ * `FunctionBase` 接口对标量值函数的特化。
  *
- * For notational convenience, we define the gradient to be a column-vector
- * of the first derivative of a scalar function. This is the transpose of the
- * corresponding Jacobian.
+ * 为了符号方便，我们将梯度定义为标量函数一阶导数的列向量。这是相应雅可比矩阵的转置。
  *
- * The Hessian is then just the Jacobian of the gradient.
+ * Hessian 就是梯度的雅可比矩阵。
  *
- * The `CheckGradient` and `CheckHessian` functions can be used to verify the
- * derivatives implemented by the user. Note that when passing parameters to
- * `CheckHessian`, the `b` vector argument still needs to be specified, even
- * though this is not required in the scalar function interface.
+ * `CheckGradient` 和 `CheckHessian` 函数可用于验证用户实现的导数。注意，当向
+ * `CheckHessian` 传递参数时，仍需要指定 `b` 向量参数，即使在标量函数接口中不需要。
  *
- * # Interface
- * The user must define the following functions:
- * - `int StateDimension() const` - number of states (length of x)
- * - `int ControlDimension() const` - number of controls (length of u)
+ * # 接口
+ * 用户必须定义以下函数：
+ * - `int StateDimension() const` - 状态数量（x 的长度）
+ * - `int ControlDimension() const` - 控制数量（u 的长度）
  * - `double Evaluate(const VectorXdRef& x, const VectorXdRef& u)`
  * - `void Gradient(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::VectorXd> out)`
  * - `void Hessian(const VectorXdRef& x, const VectorXdRef& u, Eigen::Ref<Eigen::MatrixXd> hess)`
- * - `bool HasHessian() const` - Specify if the Hessian is implemented - optional (assumed to be
- * true)
+ * - `bool HasHessian() const` - 指定是否实现了 Hessian - 可选（假设为 true）
  *
- * Where we use the following Eigen type alias:
+ * 我们使用以下 Eigen 类型别名：
  * 
  *      using VectorXdRef = Eigen::Ref<const Eigen::VectorXd>
  *
- * The user also has the option of defining the static constants:
+ * 用户还可以选择定义静态常量：
  * 
  *      static constexpr int NStates
  *      static constexpr int NControls
  *
- * which can be used to provide compile-time size information. These values
- * can be queried on run-time types using the `StateMemorySize`, and `ControlMemorySize`
- * functions.
+ * 可用于提供编译时大小信息。这些值可以使用 `StateMemorySize` 和 `ControlMemorySize`
+ * 函数在运行时类型上查询。
  *
  */
 // clang-format off

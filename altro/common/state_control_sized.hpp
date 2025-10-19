@@ -9,17 +9,16 @@
 namespace altro {
 
 /**
- * @brief Add the state and control dimension together
- * If either is dynamically sized (Eigen::Dynamic) then their addition
- * will be as well. Useful for template metaprogramming.
+ * @brief 将状态维度与控制维度相加
+ * 如果任一为动态大小（Eigen::Dynamic），它们的和也将是动态大小。
+ * 适用于模板元编程。
  * 
- * It provides `StateDimension()` and `ControlDimension()` for checking the 
- * runtime (actual) sizes, and `StateMemorySize()` and `ControlMemorySize()` for
- * checking the compile-time size.
+ * 提供用于检查运行时（实际）大小的 `StateDimension()` 与 `ControlDimension()`，
+ * 以及用于检查编译期大小的 `StateMemorySize()` 与 `ControlMemorySize()`。
  *
- * @param n state dimension at compile time
- * @param m control dimension at compile time
- * @return n+m if both sizes are known at compile time, Eigen::Dynamic otherwise
+ * @param n 编译期的状态维度
+ * @param m 编译期的控制维度
+ * @return 若两者在编译期均已知则返回 n+m，否则返回 Eigen::Dynamic
  */
 constexpr int AddSizes(int n, int m) {
   if (n == Eigen::Dynamic || m == Eigen::Dynamic) {
@@ -29,23 +28,22 @@ constexpr int AddSizes(int n, int m) {
 }
 
 /**
- * @brief A super class that stores the state and control dimension
+ * @brief 存储状态维度与控制维度的基类
+ * 总结： 适用于需要固定维度（编译期已知）或在运行时注入维度且需一致性检查的场景。
+ * 对于静态大小的数据结构，可选择在编译期存储这些维度。
  * 
- * With an option to store them at compile time for statically-sized data 
- * structures.
- * 
- * Here's an example of basic inheritance
+ * 基本的继承示例：
  * @code {.cpp}
  * template <int n, int m>
  * class Derived : public StateControlSized<n,m> {
- * 	public:
- *   Derived(int state_dim, int control_dim) 
- * 	     : StateControlSized<n,m>(state_dim, control_dim) {}
+ *   public:
+ *   Derived(int state_dim, int control_dim)
+ *       : StateControlSized<n,m>(state_dim, control_dim) {}
  * }
  * @endcode
  * 
- * @param n state dimension at compile time
- * @param m control dimension at compile time
+ * @param n 编译期的状态维度
+ * @param m 编译期的控制维度
  */
 template <int n, int m>
 class StateControlSized {

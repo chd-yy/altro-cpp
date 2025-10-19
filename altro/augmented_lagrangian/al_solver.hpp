@@ -18,12 +18,11 @@ namespace altro {
 namespace augmented_lagrangian {
 
 /**
- * @brief Trajectory optimization solver that uses augmented Lagrangian to
- * handle arbitrary constraints, while using DDP / iLQR to solve the resulting
- * unconstrained trajectory optimization problem.
+ * @brief 使用增广拉格朗日处理任意约束的轨迹优化求解器，同时使用 DDP / iLQR 求解
+ * 得到的无约束轨迹优化问题。
  *
- * @tparam n Compile-time state dimension.
- * @tparam m Compile-time control dimension.
+ * @tparam n 编译时状态维度。
+ * @tparam m 编译时控制维度。
  */
 template <int n, int m>
 class AugmentedLagrangianiLQR {
@@ -52,18 +51,15 @@ class AugmentedLagrangianiLQR {
   int NumConstraints() const;
 
   /**
-   * @brief Print a summary of all of the constraints in the problem.
+   * @brief 打印问题中所有约束的摘要。
    * 
-   * Prints the label of each constraint, it's knot point index, and a vector 
-   * of it's violations.
+   * 打印每个约束的标签、其节点索引和违反向量。
    * 
-   * Each element contains a basic description of the constraint, the knot
-   * point index at which it's located, and a vector of it's current violations.
+   * 每个元素包含约束的基本描述、其所在的节点索引和其当前违反向量。
    * 
-   * @param[in] should_sort Sorts the constraints by the infinity norm of their 
-   *                        constraint. Default is false (no sorting), where 
-   *                        they are sorted by knot point index.
-   * @param[in] precision   Controls the precision of the numerical output.
+   * @param[in] should_sort 按约束的无穷范数对约束进行排序。默认为 false（不排序），
+   *                        按节点索引排序。
+   * @param[in] precision   控制数值输出的精度。
    */
   void PrintViolations(bool should_sort = false, int precision = 4) const {
     std::vector<constraints::ConstraintInfo> coninfo = GetConstraintInfo(should_sort);
@@ -74,13 +70,11 @@ class AugmentedLagrangianiLQR {
   }
 
   /**
-   * @brief Get a list of the constraints.
+   * @brief 获取约束列表。
    * 
-   * Each element contains a basic description of the constraint, the knot
-   * point index at which it's located, and a vector of it's current violations.
+   * 每个元素包含约束的基本描述、其所在的节点索引和其当前违反向量。
    * 
-   * @param should_sort Sorts the constraints by the infinity norm of their constraint 
-   * violations.
+   * @param should_sort 按约束违反的无穷范数对约束进行排序。
    * @return std::vector<constraints::ConstraintInfo>
    */
   std::vector<constraints::ConstraintInfo> GetConstraintInfo(bool should_sort = false) const {
@@ -106,34 +100,29 @@ class AugmentedLagrangianiLQR {
   /***************************** Setters **************************************/
 
   /**
-   * @brief Set the Penalty parameter to be the same for all constraints and
-   * knot points.
+   * @brief 为所有约束和节点设置相同的惩罚参数。
    *
-   * To set the penalty independently for different constraints and/or
-   * knot points, use GetALCost(k).SetPenalty<ConType>(rho, i).
+   * 要为不同约束和/或节点独立设置惩罚，请使用 GetALCost(k).SetPenalty<ConType>(rho, i)。
    *
    * @param rho
    */
   void SetPenalty(const double& rho);
 
   /**
-   * @brief Set the Penalty scaling parameter to be the same for all constraints
-   * and knot points.
+   * @brief 为所有约束和节点设置相同的惩罚缩放参数。
    *
-   * To set the penalty scaling independently for different constraints and/or
-   * knot points, use GetALCost(k).SetPenaltyScaling<ConType>(phi, i).
+   * 要为不同约束和/或节点独立设置惩罚缩放，请使用 GetALCost(k).SetPenaltyScaling<ConType>(phi, i)。
    *
-   * @param phi Penalty parameter (phi > 1).
+   * @param phi 惩罚参数 (phi > 1)。
    */
   void SetPenaltyScaling(const double& phi);
 
   /**
-   * @brief Specify the initial guess for the state and control trajectory.
+   * @brief 指定状态和控制轨迹的初始猜测。
    *
-   * This trajectory will be modifed by the solve and will be equal to the
-   * optimized trajectory after the solve is complete.
+   * 此轨迹将被求解过程修改，并在求解完成后等于优化轨迹。
    *
-   * @param traj A pointer to the trajectory.
+   * @param traj 指向轨迹的指针。
    */
   void SetTrajectory(std::shared_ptr<Trajectory<n, m>> traj) {
     ilqr_solver_.SetTrajectory(std::move(traj));
@@ -144,48 +133,45 @@ class AugmentedLagrangianiLQR {
   void Init();
 
   /**
-   * @brief Solve the trajectory optimization problem using AL-iLQR.
+   * @brief 使用 AL-iLQR 求解轨迹优化问题。
    *
    */
   void Solve();
 
   /**
-   * @brief Update the dual variables for all of the constraints
+   * @brief 更新所有约束的对偶变量
    *
    */
   void UpdateDuals();
 
   /**
-   * @brief Update the penalty parameters for all of the constraints
+   * @brief 更新所有约束的惩罚参数
    *
    */
   void UpdatePenalties();
 
   /**
-   * @brief Calculate the convergence criterion for augmented Lagrangian
+   * @brief 计算增广拉格朗日的收敛准则
    *
    */
   void UpdateConvergenceStatistics();
 
   /**
-   * @brief Checks if the solve can terminate.
+   * @brief 检查求解是否可以终止。
    *
-   * Will terminate either because it has met the convergence criteria, or it
-   * has failed in some way.
+   * 将因为满足收敛准则或某种方式失败而终止。
    *
-   * @return true if the solver should stop iterating.
+   * @return 如果求解器应该停止迭代则返回 true。
    */
   bool IsDone();
 
   /**
-   * @brief Calculate the maximum constraint violation.
-   * Updates the constraints by evaluating the augmented Lagrangian cost.
+   * @brief 计算最大约束违反。
+   * 通过评估增广拉格朗日代价来更新约束。
    *
-   * @tparam p Norm to use to calculate violation (default is infinity).
-   * @param[in] Z The trajectory to use to evaluate the constraints. Defaults
-   * to the trajectory stored by the internal iLQR solver.
-   * @return Maximum constraint violation. Should be close to zero if
-   * the solve is successful.
+   * @tparam p 用于计算违反的范数（默认为无穷）。
+   * @param[in] Z 用于评估约束的轨迹。默认为内部 iLQR 求解器存储的轨迹。
+   * @return 最大约束违反。如果求解成功应该接近零。
    */
   template <int p = Eigen::Infinity>
   double MaxViolation();
@@ -194,21 +180,19 @@ class AugmentedLagrangianiLQR {
   double MaxViolation(const Trajectory<n, m>& Z);
 
   /**
-   * @brief Calculate the maximum constraint violation without calculating
-   * the cost. It will use the currently stored constraint values.
+   * @brief 在不计算代价的情况下计算最大约束违反。
+   * 将使用当前存储的约束值。
    *
-   * @tparam p Norm to use to calculate violation (default is infinity).
-   * @return Maximum constraint violation. Should be close to zero if
-   * the solve is successful.
+   * @tparam p 用于计算违反的范数（默认为无穷）。
+   * @return 最大约束违反。如果求解成功应该接近零。
    */
   template <int p = Eigen::Infinity>
   double GetMaxViolation();
 
   /**
-   * @brief Get the maximum penalty parameter used across all constraints and
-   * knot points.
+   * @brief 获取所有约束和节点中使用的最大惩罚参数。
    *
-   * @return The maximum penalty parameter.
+   * @return 最大惩罚参数。
    */
   double GetMaxPenalty() const;
 
@@ -220,7 +204,7 @@ class AugmentedLagrangianiLQR {
   ilqr::iLQR<n, m> ilqr_solver_;
   std::vector<std::shared_ptr<ALCost<n, m>>> costs_;
   SolverStatus status_ = SolverStatus::kUnsolved;
-  VectorXd max_violation_;  // (N+1,) vector of constraint violations at each knot point
+  VectorXd max_violation_;  // (N+1,) 每个节点的约束违反向量
 };
 
 ////////////////////////////////////////////////////////////////////////////////

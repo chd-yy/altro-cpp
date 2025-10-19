@@ -46,7 +46,7 @@ class DynamicsExpansion : public StateControlSized<n, m> {
     model->Jacobian(x, u, t, h, jac_);
   }
 
-  // Include this just to provide a more descriptive error message
+  // 包含此函数只是为了提供更具描述性的错误消息
   void CalcExpansion(const std::shared_ptr<problem::ContinuousDynamics>& model,
                      const VectorXdRef& x,
                      const VectorXdRef& u, const float t,

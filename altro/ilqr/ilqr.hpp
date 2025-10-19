@@ -23,26 +23,20 @@ namespace altro {
 namespace ilqr {
 
 /**
- * @brief Solve an unconstrained trajectory optimization problem using
- * iterative LQR.
+ * @brief 使用迭代 LQR 求解无约束轨迹优化问题。
  *
- * The class can be default constructed or initialized for a given number of
- * knot points. Currently, once set, the number of knot points cannot be changed.
- * If default-initialized, the number of knot points is pulled from the problem
- * in the first call to `CopyFromProblem`.
+ * 该类可以默认构造或为给定数量的节点初始化。目前，一旦设置，
+ * 节点数量就无法更改。如果默认初始化，则在第一次调用
+ * `CopyFromProblem` 时从问题中提取节点数量。
  *
- * The iLQR algorithm works taking a second-order approximation of the cost
- * function and a first-order expansion of the dynamics. A locally-optimal
- * feedback control policy is then constructed around the current estimate
- * of the optimal trajectory, which is calculated using a generalization of
- * time-varying LQR during the "backward pass". This policy is then used to
- * simulate the system forward during the "forward pass", and the process
- * is repeated until convergence. Since the system is simulated forward
- * every iteration, iLQR effectively only optimizes directly over the
- * control variables.
+ * iLQR 算法通过对代价函数进行二阶近似和对动力学进行一阶展开来工作。
+ * 然后围绕当前最优轨迹的估计构造局部最优的反馈控制策略，
+ * 该策略在"后向传递"期间使用时变 LQR 的推广来计算。
+ * 然后在"前向传递"期间使用该策略模拟系统前进，并重复该过程直到收敛。
+ * 由于系统在每次迭代中都向前模拟，iLQR 实际上只直接优化控制变量。
  *
- * @tparam n Compile-time state dimension.
- * @tparam m Compile-time control dimension.
+ * @tparam n 编译时状态维度。
+ * @tparam m 编译时控制维度。
  */
 template <int n = Eigen::Dynamic, int m = Eigen::Dynamic>
 class iLQR {
@@ -71,28 +65,26 @@ class iLQR {
                                 max_violation_callback_(std::move(other.max_violation_callback_)) {}
 
   /**
-   * @brief Copy the data from a Problem class into the iLQR solver
+   * @brief 将 Problem 类的数据复制到 iLQR 求解器中
    *
-   * Capture shared pointers to the cost and dynamics objects for each
-   * knot point, storing them in the correspoding KnotPointFunctions object.
+   * 捕获每个节点的代价和动力学对象的共享指针，
+   * 将它们存储在相应的 KnotPointFunctions 对象中。
    *
-   * Assumes both the problem and the solver have the number of knot points.
+   * 假设问题和求解器都具有相同数量的节点。
    *
-   * Allows for a subset of the knot points to be copied, since in the future
-   * this method might be used to specify compile-time sizes for hybrid /
-   * switched dynamics.
+   * 允许复制节点的子集，因为将来此方法可能用于为混合/切换动力学
+   * 指定编译时大小。
    *
-   * Appends the knotpoints to those currently in the solver.
+   * 将节点追加到求解器中当前的节点。
    *
-   * Captures the initial state from the problem as a shared pointer, so the
-   * initial state of the solver is changed by modifying the initial state of
-   * the original problem.
+   * 从问题中捕获初始状态作为共享指针，因此通过修改原始问题的
+   * 初始状态来更改求解器的初始状态。
    *
-   * @tparam n2 Compile-time state dimension. Can be Eigen::Dynamic (-1)
-   * @tparam m2 Compile-time control dimension. Can be Eigen::Dynamic (-1)
-   * @param prob Trajectory optimization problem
-   * @param k_start Starting index (inclusive) for data to copy. 0 <= k_start < N+1
-   * @param k_stop Terminal index (exclusive) for data to copy. 0 < k_stop <= N+1
+   * @tparam n2 编译时状态维度。可以是 Eigen::Dynamic (-1)
+   * @tparam m2 编译时控制维度。可以是 Eigen::Dynamic (-1)
+   * @param prob 轨迹优化问题
+   * @param k_start 要复制数据的起始索引（包含）。0 <= k_start < N+1
+   * @param k_stop 要复制数据的终止索引（不包含）。0 < k_stop <= N+1
    */
   template <int n2 = n, int m2 = m>
   void CopyFromProblem(const problem::Problem& prob, int k_start, int k_stop) {
@@ -132,24 +124,23 @@ class iLQR {
     ResetInternalVariables();
   }
 
-  /***************************** Getters **************************************/
+  /***************************** 获取器 **************************************/
   /**
-   * @brief Get a pointer to the trajectory
+   * @brief 获取轨迹的指针
    *
    */
   std::shared_ptr<Trajectory<n, m>> GetTrajectory() { return Z_; }
 
   /**
-   * @brief Return the number of segments in the trajectory
+   * @brief 返回轨迹中的段数
    */
   int NumSegments() const { return N_; }
   /**
-   * @brief Get the Knot Point Function object, which contains all of the
-   * data for each knot point, including cost and dynamics expansions,
-   * feedback and feedforward gains, cost-to-go expansion, etc.
+   * @brief 获取节点函数对象，该对象包含每个节点的所有数据，
+   * 包括代价和动力学展开、反馈和前馈增益、代价到达展开等。
    *
-   * @param k knot point index, 0 <= k <= N_
-   * @return reference to the KnotPointFunctions class
+   * @param k 节点索引，0 <= k <= N_
+   * @return KnotPointFunctions 类的引用
    */
   KnotPointFunctions<n, m>& GetKnotPointFunction(int k) {
     ALTRO_ASSERT((k >= 0) && (k <= N_), "Invalid knot point index.");
@@ -166,18 +157,17 @@ class iLQR {
   double GetRegularization() { return rho_; }
 
   /**
-   * @brief Get the assignment of the trajectory into tasks.
+   * @brief 获取轨迹分配到任务的分配方案。
    *
-   * A task is defined by a set of consecutive knot point indices whose
-   * expansions will be processed serially. Although all knot points can be
-   * processed in parallel, it's usually better to "chunk" the trajectory into
-   * the number of available parallel processors.
+   * 任务由一组连续的节点索引定义，其展开将被串行处理。
+   * 尽管所有节点都可以并行处理，但通常最好将轨迹"分块"为
+   * 可用并行处理器的数量。
    *
-   * Most users will not need to consume this information.
+   * 大多数用户不需要使用此信息。
    *
-   * @return std::vector<int>& A vector of strictly increasing knot point indices.
-   * Each tasks processes knotpoints in the interval [`inds[k]`, `inds[k+1]`),
-   * where `inds[0] = 0` and inds.back() = N+1`.
+   * @return std::vector<int>& 严格递增的节点索引向量。
+   * 每个任务处理区间 [`inds[k]`, `inds[k+1]`) 中的节点，
+   * 其中 `inds[0] = 0` 且 inds.back() = N+1`。
    *
    */
   std::vector<int>& GetTaskAssignment() {
@@ -188,30 +178,29 @@ class iLQR {
   }
 
   /**
-   * @brief Get the number of threads used in the iLQR solver
+   * @brief 获取 iLQR 求解器中使用的线程数
    *
-   * @return Number of threads
+   * @return 线程数
    */
   size_t NumThreads() const { return pool_.NumThreads(); }
 
   /**
-   * @brief Get the number of tasks that can be executed in parallel.
+   * @brief 获取可以并行执行的任务数。
    *
-   * Controlled via `AssignWork`.
+   * 通过 `AssignWork` 控制。
    *
    */
   int NumTasks() const { return work_inds_.size() - 1; }
 
   /**
-   * @brief Create a new zero-initialized trajectory.
+   * @brief 创建一个新的零初始化轨迹。
    *
-   * Assumes a uniform time step.
-   * The trajectory is automatically linked to the solver and is used
-   * both as the initial guess and as the storage location for the optimized
-   * solution during and after the solve.
+   * 假设使用均匀的时间步长。
+   * 轨迹自动链接到求解器，并在求解期间和求解后用作初始猜测
+   * 和优化解的存储位置。
    *
-   * @param dt Time step used in the trajectory.
-   * @return std::shared_ptr<Trajectory<n, m>> A new zero-initialized trajectory.
+   * @param dt 轨迹中使用的时间步长。
+   * @return std::shared_ptr<Trajectory<n, m>> 一个新的零初始化轨迹。
    */
   std::shared_ptr<Trajectory<n, m>> MakeTrajectory(float dt) {
     Z_ = std::make_shared<Trajectory<n, m>>(NumSegments());
@@ -219,14 +208,13 @@ class iLQR {
     return Z_;
   }
 
-  /***************************** Setters **************************************/
+  /***************************** 设置器 **************************************/
   /**
-   * @brief Store a pointer to the trajectory
+   * @brief 存储轨迹的指针
    *
-   * This trajectory will be used as the initial guess and will also be the
-   * storage location for the optimized trajectory.
+   * 该轨迹将用作初始猜测，也将是优化轨迹的存储位置。
    *
-   * @param traj Pointer to the trajectory
+   * @param traj 轨迹的指针
    */
   void SetTrajectory(std::shared_ptr<Trajectory<n, m>> traj) {
     Z_ = std::move(traj);
@@ -239,21 +227,18 @@ class iLQR {
   }
 
   /**
-   * @brief Set the division of knot points indices into parallelizable tasks.
+   * @brief 设置节点索引到可并行化任务的划分。
    *
-   * Defines groups of consecutive knotpoints that should be processed in series
-   * as a single task. Each group can then be run independently and in parallel.
-   * For best performance, the number of tasks should be equal to the number of
-   * available cores.
+   * 定义应作为单个任务串行处理的连续节点组。
+   * 然后每个组可以独立并行运行。
+   * 为获得最佳性能，任务数应等于可用核心数。
    *
-   * Once this is set, the solver will no longer automatically adjust the
-   * number of tasks if the number of requested threads (via `GetOptions().nthreads`)
-   * or tasks per thread (via `GetOptions().tasks_per_thread`) changes.
-   * changes. Is is the user's responsibility to modify this as needed once set.
+   * 一旦设置，如果请求的线程数（通过 `GetOptions().nthreads`）
+   * 或每个线程的任务数（通过 `GetOptions().tasks_per_thread`）发生变化，
+   * 求解器将不再自动调整任务数。一旦设置，用户有责任根据需要修改此值。
    *
-   * @param inds A strictly increasing vector of knot point indices. For a vector
-   * of length N, it defines N-1 tasks, where each task processes indices in the
-   * interval [`inds[i]`, `inds[i+1]`).
+   * @param inds 严格递增的节点索引向量。对于长度为 N 的向量，
+   * 它定义了 N-1 个任务，其中每个任务处理区间 [`inds[i]`, `inds[i+1]`) 中的索引。
    */
   void SetTaskAssignment(std::vector<int> inds) {
     ALTRO_ASSERT(work_inds_.back() == NumSegments() + 1,
@@ -271,30 +256,29 @@ class iLQR {
     custom_work_assignment_ = true;
   }
 
-  /***************************** Algorithm **************************************/
+  /***************************** 算法 **************************************/
   /**
-   * @brief Solve the trajectory optimization problem using iLQR
+   * @brief 使用 iLQR 求解轨迹优化问题
    *
-   * @post The provided trajectory is overwritten with a locally-optimal
-   * dynamically-feasible trajectory. The solver status and statistics,
-   * obtained via GetStatus() and GetStats() are updated.
-   * The solve is successful if `GetStatus == SolverStatus::kSuccess`.
+   * @post 提供的轨迹将被局部最优的动态可行轨迹覆盖。
+   * 通过 GetStatus() 和 GetStats() 获得的求解器状态和统计信息会被更新。
+   * 如果 `GetStatus == SolverStatus::kSuccess`，则求解成功。
    *
    */
   void Solve() {
     ALTRO_ASSERT(is_initial_state_set, "Initial state must be set before solving.");
     ALTRO_ASSERT(Z_ != nullptr, "Invalid trajectory pointer. May be uninitialized.");
 
-    // TODO(bjackson): Allow the solver to optimize a portion of a longer trajectory?
+    // TODO(bjackson): 允许求解器优化更长轨迹的一部分？
     ALTRO_ASSERT(Z_->NumSegments() == N_,
                  fmt::format("Initial trajectory must have length {}", N_));
 
-    // Start profiler
+    // 启动分析器
     GetOptions().profiler_enable ? stats_.GetTimer()->Activate() : stats_.GetTimer()->Deactivate();
     Stopwatch sw = stats_.GetTimer()->Start("ilqr");
 
-    SolveSetup();  // reset any internal variables
-    Rollout();     // simulate the system forward using initial controls
+    SolveSetup();  // 重置所有内部变量
+    Rollout();     // 使用初始控制模拟系统前进
     stats_.initial_cost = Cost();
 
     for (int iter = 0; iter < GetOptions().max_iterations_inner; ++iter) {
@@ -316,12 +300,12 @@ class iLQR {
   }
 
   /**
-   * @brief Calculate the cost of the current trajectory
+   * @brief 计算当前轨迹的代价
    *
-   * By default, it will use the current guess stored in the solver, but it
-   * can be passed any compatible trajectory.
+   * 默认情况下，它将使用求解器中存储的当前猜测，
+   * 但也可以传递任何兼容的轨迹。
    *
-   * @return double The current cost
+   * @return double 当前代价
    */
   double Cost() {
     ALTRO_ASSERT(Z_ != nullptr, "Invalid trajectory pointer. May be uninitialized.");
@@ -334,17 +318,17 @@ class iLQR {
   }
 
   /**
-   * @brief Update the cost and dynamics expansions
+   * @brief 更新代价和动力学展开
    *
-   * NOTE: Also calculates the cost for each knot point.
+   * 注意：还会计算每个节点的代价。
    *
-   * Computes the first and second order expansions of the cost and dynamics,
-   * storing the results in the KnotPointFunctions class for each knot point.
+   * 计算代价和动力学的一阶和二阶展开，
+   * 将结果存储在每个节点的 KnotPointFunctions 类中。
    *
-   * @pre The trajectory must set to the next guess for the optimal trajectory.
-   * The trajectory cannot be a nullptr, and must be set via SetTrajectory.
+   * @pre 轨迹必须设置为最优轨迹的下一个猜测。
+   * 轨迹不能为 nullptr，必须通过 SetTrajectory 设置。
    *
-   * @post The expansions are updated for knotpoints_[k], 0 <= k < N_
+   * @post knotpoints_[k] 的展开已更新，0 <= k < N_
    *
    */
   void UpdateExpansions() {
@@ -366,20 +350,17 @@ class iLQR {
   }
 
   /**
-   * @brief Compute a locally optimal linear-feedback policy
+   * @brief 计算局部最优的线性反馈策略
    *
-   * The backward pass uses time-varying LQR to compute an optimal
-   * linear-feedback control policy. As the solve converges the constant
-   * feed-forward terms should go to zero. The solve also computes a local
-   * quadratic approximation of the cost-to-go.
+   * 后向传递使用时变 LQR 来计算最优的线性反馈控制策略。
+   * 随着求解收敛，常数前馈项应该趋于零。
+   * 求解还计算代价到达的局部二次近似。
    *
-   * @pre The cost and dynamics expansions have already been computed using
-   * UpdateExpansions.
+   * @pre 已使用 UpdateExpansions 计算代价和动力学展开。
    *
-   * @post The feedforward and feedback gains, action-value expansion, and
-   * cost-to-go expansion terms are all updated inside the KnotPointFunctions
-   * class for each knot point. The overall expected cost decrease is stored
-   * in deltaV_.
+   * @post 每个节点的 KnotPointFunctions 类中的前馈和反馈增益、
+   * 动作值展开和代价到达展开项都已更新。
+   * 总体预期代价减少存储在 deltaV_ 中。
    *
    */
   void BackwardPass() {
